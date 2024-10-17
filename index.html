@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parlay Odds Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
+        }
+        .matchup {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+        .team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+        }
+        .betslip {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button-clear {
+            background-color: #f44336;
+        }
+        .input-amount {
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Parlay Odds Calculator</h1>
+
+    <div id="matchups-container"></div>
+
+    <div>
+        <label for="parlay-amount">Enter Parlay Amount (Optional):</label>
+        <input type="number" id="parlay-amount" class="input-amount" placeholder="0">
+    </div>
+
+    <button class="button" onclick="calculateParlay()">Calculate Parlay</button>
+    <button class="button button-clear" onclick="clearForm()">Clear Form</button>
+
+    <div id="betslip" class="betslip">
+        <h3>Bet Slip</h3>
+        <div id="betslip-content"></div>
+        <div id="parlay-payout"></div>
+        <button class="button" onclick="copyToClipboard()">Copy to Clipboard</button>
+    </div>
+
+    <script>
+        const data = [{"Matchup #": 1.0, "Team": "Dr. Bozorgh", "Spread": 10.0, "Spread odds": -115.0, "Implied Chances": "43.56%", "Moneyline chance": 46.61, "Moneyline odds": 115.0}, {"Matchup #": NaN, "Team": "Glizzy Gobblers", "Spread": -10.0, "Spread odds": -115.0, "Implied Chances": "56.44%", "Moneyline chance": 60.39, "Moneyline odds": -152.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 2.0, "Team": "We Be Chubbin'", "Spread": -3.0, "Spread odds": -115.0, "Implied Chances": "51.74%", "Moneyline chance": 55.36, "Moneyline odds": -124.0}, {"Matchup #": NaN, "Team": "Blacked Out Bill", "Spread": 3.0, "Spread odds": -115.0, "Implied Chances": "48.26%", "Moneyline chance": 51.64, "Moneyline odds": -107.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 3.0, "Team": "Little Lebowski Urban Achievers", "Spread": 4.0, "Spread odds": -115.0, "Implied Chances": "47.59%", "Moneyline chance": 50.92, "Moneyline odds": -104.0}, {"Matchup #": NaN, "Team": "Big Digg Energy", "Spread": -4.0, "Spread odds": -115.0, "Implied Chances": "52.41%", "Moneyline chance": 56.08, "Moneyline odds": -128.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 4.0, "Team": "Hawk Tua", "Spread": 6.0, "Spread odds": -115.0, "Implied Chances": "46.25%", "Moneyline chance": 49.49, "Moneyline odds": 102.0}, {"Matchup #": NaN, "Team": "Westboro Baptist Church", "Spread": -6.0, "Spread odds": -115.0, "Implied Chances": "53.75%", "Moneyline chance": 57.51, "Moneyline odds": -135.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 5.0, "Team": "Elder Statesman", "Spread": -13.0, "Spread odds": -115.0, "Implied Chances": "58.46%", "Moneyline chance": 62.55, "Moneyline odds": -167.0}, {"Matchup #": NaN, "Team": "Dr Gonzo\u2019s Advice", "Spread": 13.0, "Spread odds": -115.0, "Implied Chances": "41.54%", "Moneyline chance": 44.45, "Moneyline odds": 125.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 6.0, "Team": "Blohm's Divorce Attorney", "Spread": 10.0, "Spread odds": -115.0, "Implied Chances": "43.56%", "Moneyline chance": 46.61, "Moneyline odds": 115.0}, {"Matchup #": NaN, "Team": "Joe Horn's  Favorite Son", "Spread": -10.0, "Spread odds": -115.0, "Implied Chances": "56.44%", "Moneyline chance": 60.39, "Moneyline odds": -152.0}];  // Embedded JSON data from Python
+
+        function createMatchups() {
+            const container = document.getElementById("matchups-container");
+            container.innerHTML = "";  // Clear any previous data
+
+            // Loop through all the matchups in data
+            for (let i = 0; i < data.length; i += 3) {
+                const homeTeam = data[i];
+                const awayTeam = data[i + 1];
+
+                if (homeTeam && awayTeam && awayTeam.Team) {
+                    const matchupDiv = document.createElement("div");
+                    matchupDiv.className = "matchup";
+
+                    const matchupText = document.createElement("h4");
+                    matchupText.textContent = `${homeTeam.Team} vs ${awayTeam.Team}`;
+                    matchupText.style.margin = "0";
+                    matchupDiv.appendChild(matchupText);
+
+                    [homeTeam, awayTeam].forEach((team, index) => {
+                        const teamDiv = document.createElement("div");
+                        teamDiv.className = "team";
+
+                        // Moneyline bet checkbox
+                        const moneylineCheckbox = document.createElement("input");
+                        moneylineCheckbox.type = "checkbox";
+                        moneylineCheckbox.id = `moneyline-checkbox-${i + index}`;
+                        moneylineCheckbox.dataset.index = i + index;
+                        moneylineCheckbox.onclick = () => toggleAmountInput(i + index, 'moneyline');
+
+                        const moneylineLabel = document.createElement("label");
+                        moneylineLabel.htmlFor = `moneyline-checkbox-${i + index}`;
+                        moneylineLabel.textContent = `${team.Team} (Moneyline Odds: ${team["Moneyline odds"]})`;
+
+                        const moneylineInput = document.createElement("input");
+                        moneylineInput.type = "number";
+                        moneylineInput.className = "input-amount";
+                        moneylineInput.id = `moneyline-amount-${i + index}`;
+                        moneylineInput.disabled = true;
+
+                        teamDiv.appendChild(moneylineCheckbox);
+                        teamDiv.appendChild(moneylineLabel);
+                        teamDiv.appendChild(moneylineInput);
+
+                        // Spread bet checkbox
+                        const spreadCheckbox = document.createElement("input");
+                        spreadCheckbox.type = "checkbox";
+                        spreadCheckbox.id = `spread-checkbox-${i + index}`;
+                        spreadCheckbox.dataset.index = i + index;
+                        spreadCheckbox.onclick = () => toggleAmountInput(i + index, 'spread');
+
+                        const spreadLabel = document.createElement("label");
+                        spreadLabel.htmlFor = `spread-checkbox-${i + index}`;
+                        spreadLabel.textContent = `${team.Team} (Spread: ${team.Spread} Odds: ${team["Spread odds"]})`;
+
+                        const spreadInput = document.createElement("input");
+                        spreadInput.type = "number";
+                        spreadInput.className = "input-amount";
+                        spreadInput.id = `spread-amount-${i + index}`;
+                        spreadInput.disabled = true;
+
+                        teamDiv.appendChild(spreadCheckbox);
+                        teamDiv.appendChild(spreadLabel);
+                        teamDiv.appendChild(spreadInput);
+
+                        matchupDiv.appendChild(teamDiv);
+                    });
+
+                    container.appendChild(matchupDiv);
+                }
+            }
+        }
+
+        function toggleAmountInput(index, betType) {
+            const checkbox = document.getElementById(`${betType}-checkbox-${index}`);
+            const amountInput = document.getElementById(`${betType}-amount-${index}`);
+            amountInput.disabled = !checkbox.checked;
+        }
+
+        function convertToDecimalOdds(odds) {
+            if (odds < 0) {
+                return (100 / Math.abs(odds)) + 1;
+            } else {
+                return (odds / 100) + 1;
+            }
+        }
+
+        function calculateParlay() {
+            const betslipContent = document.getElementById("betslip-content");
+            betslipContent.innerHTML = "";
+
+            let combinedOdds = 1;
+            let betSelected = false;
+            let betslipText = "";
+
+            data.forEach((team, index) => {
+                if (team.Team) {
+                    // Check moneyline bet
+                    const moneylineCheckbox = document.getElementById(`moneyline-checkbox-${index}`);
+                    const moneylineInput = document.getElementById(`moneyline-amount-${index}`);
+
+                    if (moneylineCheckbox.checked) {
+                        betSelected = true;
+                        const amount = parseFloat(moneylineInput.value) || 0;
+                        const decimalOdds = convertToDecimalOdds(team["Moneyline odds"]);
+                        combinedOdds *= decimalOdds;
+
+                        const payout = (amount * (decimalOdds - 1)).toFixed(2); // Individual payout calculation
+                        const betInfo = `${team.Team} (Moneyline) - Odds: ${team["Moneyline odds"]}, Bet Amount: ${amount}, Payout: ${payout}`;
+                        betslipText += betInfo + "\n";
+
+                        const div = document.createElement("div");
+                        div.textContent = betInfo;
+                        betslipContent.appendChild(div);
+                    }
+
+                    // Check spread bet
+                    const spreadCheckbox = document.getElementById(`spread-checkbox-${index}`);
+                    const spreadInput = document.getElementById(`spread-amount-${index}`);
+
+                    if (spreadCheckbox.checked) {
+                        betSelected = true;
+                        const amount = parseFloat(spreadInput.value) || 0;
+                        const decimalOdds = convertToDecimalOdds(team["Spread odds"]);
+                        combinedOdds *= decimalOdds;
+
+                        const payout = (amount * (decimalOdds - 1)).toFixed(2); // Individual payout calculation
+                        const betInfo = `${team.Team} (Spread: ${team.Spread}) - Odds: ${team["Spread odds"]}, Bet Amount: ${amount}, Payout: ${payout}`;
+                        betslipText += betInfo + "\n";
+
+                        const div = document.createElement("div");
+                        div.textContent = betInfo;
+                        betslipContent.appendChild(div);
+                    }
+                }
+            });
+
+            if (betSelected) {
+                const wager = parseFloat(document.getElementById('parlay-amount').value) || 0;
+                if (wager > 0) {
+                    const payout = (wager * (combinedOdds - 1)).toFixed(2);
+                    const payoutDiv = document.getElementById("parlay-payout");
+                    payoutDiv.innerHTML = `<strong>Parlay Payout: ${payout}</strong>`;
+                }
+            } else {
+                betslipContent.textContent = "No bets selected!";
+            }
+        }
+
+        function clearForm() {
+            data.forEach((_, index) => {
+                const moneylineCheckbox = document.getElementById(`moneyline-checkbox-${index}`);
+                const moneylineInput = document.getElementById(`moneyline-amount-${index}`);
+                const spreadCheckbox = document.getElementById(`spread-checkbox-${index}`);
+                const spreadInput = document.getElementById(`spread-amount-${index}`);
+
+                if (moneylineCheckbox) {
+                    moneylineCheckbox.checked = false;
+                    moneylineInput.value = "";
+                    moneylineInput.disabled = true;
+                }
+
+                if (spreadCheckbox) {
+                    spreadCheckbox.checked = false;
+                    spreadInput.value = "";
+                    spreadInput.disabled = true;
+                }
+            });
+
+            const betslipContent = document.getElementById("betslip-content");
+            betslipContent.innerHTML = "";
+
+            const payoutDiv = document.getElementById("parlay-payout");
+            payoutDiv.innerHTML = "";
+            document.getElementById('parlay-amount').value = "";
+        }
+
+        function copyToClipboard() {
+            const betslipContent = document.getElementById("betslip-content").innerText;
+            navigator.clipboard.writeText(betslipContent).then(() => {
+                alert("Bet slip copied to clipboard!");
+            }).catch(err => {
+                console.error("Could not copy text: ", err);
+            });
+        }
+
+        createMatchups();
+    </script>
+</body>
+</html>
