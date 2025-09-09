@@ -24,7 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy Parlay Picks - Week 2</h2>
+    <h2>Fantasy Parlay Picks - Week X</h2>
     
     <h3>Availability Grid (Green = Open, Red = Picked)</h3>
     <table id="gridTable">
@@ -352,19 +352,21 @@
         function updatePicksTable(data) {
             const tbody = document.getElementById('picksTable').querySelector('tbody');
             tbody.innerHTML = '';
-            const sortedEntries = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
-            sortedEntries.forEach(([sanitizedTeam, p]) => {
-                if (p) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${p.originalTeam}</td>
-                        <td>${p.matchup}</td>
-                        <td>${p.type}</td>
-                        <td>${p.details}</td>
-                        <td>${p.timestamp || 'N/A'}</td>
-                    `;
-                    tbody.appendChild(row);
-                }
+            const teamSelect = document.getElementById('teamSelect');
+            const teams = Array.from(teamSelect.options).slice(1).map(option => option.value); // All teams except the empty option
+
+            teams.forEach(originalTeam => {
+                const sanitizedTeam = sanitizeKey(originalTeam);
+                const pick = data[sanitizedTeam] || { matchup: "N/A", type: "N/A", details: "N/A", timestamp: "N/A" };
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${originalTeam}</td>
+                    <td>${pick.matchup}</td>
+                    <td>${pick.type}</td>
+                    <td>${pick.details}</td>
+                    <td>${pick.timestamp}</td>
+                `;
+                tbody.appendChild(row);
             });
         }
 
