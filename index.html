@@ -1,259 +1,443 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parlay Odds Calculator</title>
+    <title>Fantasy Parlay Picker</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 20px;
-        }
-        .matchup {
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            padding: 5px;
-            margin-bottom: 5px;
-        }
-        .team {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 2px 0;
-        }
-        .betslip {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-        }
-        .button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .button-clear {
-            background-color: #f44336;
-        }
-        .input-amount {
-            width: 50px;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        #gridTable td { min-width: 120px; cursor: pointer; }
+        #gridTable td.green { background-color: #90ee90; color: black; } /* Light green */
+        #gridTable td.red { background-color: #ffcccb; color: black; } /* Light red */
+        #gridTable td:hover { opacity: 0.8; }
+        #form { max-width: 400px; }
+        select, input { width: 100%; margin-bottom: 10px; padding: 5px; box-sizing: border-box; }
+        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
+        #result { color: red; }
+        .hidden { display: none; }
+        @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h1>Parlay Odds Calculator</h1>
-
-    <div id="matchups-container"></div>
-
-    <div>
-        <label for="parlay-amount">Enter Parlay Amount (Optional):</label>
-        <input type="number" id="parlay-amount" class="input-amount" placeholder="0">
-    </div>
-
-    <button class="button" onclick="calculateParlay()">Calculate Parlay</button>
-    <button class="button button-clear" onclick="clearForm()">Clear Form</button>
-
-    <div id="betslip" class="betslip">
-        <h3>Bet Slip</h3>
-        <div id="betslip-content"></div>
-        <div id="parlay-payout"></div>
-        <button class="button" onclick="copyToClipboard()">Copy to Clipboard</button>
+    <h2>Fantasy Parlay Picks - Week 2</h2>
+    
+    <h3>Availability Grid (Green = Open, Red = Picked)</h3>
+    <table id="gridTable">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <!-- Matchups will be added as columns here dynamically -->
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="moneylineRow"><td>Moneyline</td></tr>
+            <tr id="spreadRow"><td>Spread</td></tr>
+            <tr id="overUnderRow"><td>Over/Under</td></tr>
+        </tbody>
+    </table>
+    
+    <h3>Current Picks</h3>
+    <table id="picksTable">
+        <thead>
+            <tr>
+                <th>Fantasy Team</th>
+                <th>Matchup</th>
+                <th>Bet Type</th>
+                <th>Details</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    
+    <h3>Make/Update Your Pick</h3>
+    <div id="form">
+        <select id="teamSelect">
+            <option value="">Select your fantasy team</option>
+            <option value="We Be Chubbin&apos;">We Be Chubbin&apos;</option>
+            <option value="Big Digg Energy">Big Digg Energy</option>
+            <option value="Blacked Out Bill">Blacked Out Bill</option>
+            <option value="Dr. Bozorgh">Dr. Bozorgh</option>
+            <option value="Dr. Gonzo&apos;s Advice">Dr. Gonzo&apos;s Advice</option>
+            <option value="Westboro Baptist Church">Westboro Baptist Church</option>
+            <option value="Glizzy Gobblers">Glizzy Gobblers</option>
+            <option value="Elder Statesman">Elder Statesman</option>
+            <option value="Beth&apos;s Divorce Attorney">Beth&apos;s Divorce Attorney</option>
+            <option value="Hawk Tua">Hawk Tua</option>
+            <option value="Little Lebowski Urban Achievers">Little Lebowski Urban Achievers</option>
+            <option value="Joe Horn&apos;s Favorite Son">Joe Horn&apos;s Favorite Son</option>
+        </select>
+        <select id="matchupSelect">
+            <option value="">Select matchup</option>
+        </select>
+        <select id="betTypeSelect">
+            <option value="">Select bet type</option>
+            <option value="Moneyline">Moneyline</option>
+            <option value="Spread">Spread</option>
+            <option value="Over/Under">Over/Under</option>
+        </select>
+        <div id="teamPickDiv" class="hidden">
+            <select id="teamPickSelect">
+                <option value="">Select team</option>
+            </select>
+        </div>
+        <div id="spreadDiv" class="hidden">
+            <select id="spreadSelect">
+                <option value="">Select spread</option>
+            </select>
+        </div>
+        <div id="overUnderDiv" class="hidden">
+            <select id="overUnderSelect">
+                <option value="">Select Over/Under</option>
+                <option value="Over">Over</option>
+                <option value="Under">Under</option>
+            </select>
+            <input type="text" id="totalInput" value="Default" placeholder="Total (Default = default)">
+        </div>
+        <button onclick="submitPick()">Submit Pick</button>
+        <p id="result"></p>
     </div>
 
     <script>
-        const data = [{"Matchup #": 1.0, "Team": "Dr. Bozorgh", "Spread": 10.0, "Spread odds": -115.0, "Implied Chances": "43.56%", "Moneyline chance": 46.61, "Moneyline odds": 115.0}, {"Matchup #": NaN, "Team": "Glizzy Gobblers", "Spread": -10.0, "Spread odds": -115.0, "Implied Chances": "56.44%", "Moneyline chance": 60.39, "Moneyline odds": -152.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 2.0, "Team": "We Be Chubbin'", "Spread": -3.0, "Spread odds": -115.0, "Implied Chances": "51.74%", "Moneyline chance": 55.36, "Moneyline odds": -124.0}, {"Matchup #": NaN, "Team": "Blacked Out Bill", "Spread": 3.0, "Spread odds": -115.0, "Implied Chances": "48.26%", "Moneyline chance": 51.64, "Moneyline odds": -107.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 3.0, "Team": "Little Lebowski Urban Achievers", "Spread": 4.0, "Spread odds": -115.0, "Implied Chances": "47.59%", "Moneyline chance": 50.92, "Moneyline odds": -104.0}, {"Matchup #": NaN, "Team": "Big Digg Energy", "Spread": -4.0, "Spread odds": -115.0, "Implied Chances": "52.41%", "Moneyline chance": 56.08, "Moneyline odds": -128.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 4.0, "Team": "Hawk Tua", "Spread": 6.0, "Spread odds": -115.0, "Implied Chances": "46.25%", "Moneyline chance": 49.49, "Moneyline odds": 102.0}, {"Matchup #": NaN, "Team": "Westboro Baptist Church", "Spread": -6.0, "Spread odds": -115.0, "Implied Chances": "53.75%", "Moneyline chance": 57.51, "Moneyline odds": -135.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 5.0, "Team": "Elder Statesman", "Spread": -13.0, "Spread odds": -115.0, "Implied Chances": "58.46%", "Moneyline chance": 62.55, "Moneyline odds": -167.0}, {"Matchup #": NaN, "Team": "Dr Gonzo\u2019s Advice", "Spread": 13.0, "Spread odds": -115.0, "Implied Chances": "41.54%", "Moneyline chance": 44.45, "Moneyline odds": 125.0}, {"Matchup #": NaN, "Team": NaN, "Spread": NaN, "Spread odds": NaN, "Implied Chances": NaN, "Moneyline chance": NaN, "Moneyline odds": NaN}, {"Matchup #": 6.0, "Team": "Blohm's Divorce Attorney", "Spread": 10.0, "Spread odds": -115.0, "Implied Chances": "43.56%", "Moneyline chance": 46.61, "Moneyline odds": 115.0}, {"Matchup #": NaN, "Team": "Joe Horn's  Favorite Son", "Spread": -10.0, "Spread odds": -115.0, "Implied Chances": "56.44%", "Moneyline chance": 60.39, "Moneyline odds": -152.0}];  // Embedded JSON data from Python
+        // Replace with your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
+            authDomain: "caswellstbets-c09de.firebaseapp.com",
+            databaseURL: "https://caswellstbets-c09de-default-rtdb.firebaseio.com",
+            projectId: "caswellstbets-c09de",
+            storageBucket: "caswellstbets-c09de.firebasestorage.app",
+            messagingSenderId: "502012052829",
+            appId: "1:502012052829:web:f34f8ce9e0fb475d4f94b4",
+            measurementId: "G-5Y18HXVH23"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const picksRef = db.ref('picks');
 
-        function createMatchups() {
-            const container = document.getElementById("matchups-container");
-            container.innerHTML = "";  // Clear any previous data
+        // Hardcode matchups for the week (update manually each week) - order matches the image
+        const matchups = [
+            "Washington @ Green Bay",
+            "Jacksonville @ Cincinnati",
+            "New York @ Dallas",
+            "Chicago @ Detroit",
+            "Los Angeles @ Tennessee",
+            "New England @ Miami",
+            "San Francisco @ New Orleans",
+            "Buffalo @ New York",
+            "Seattle @ Pittsburgh",
+            "Cleveland @ Baltimore",
+            "Denver @ Indianapolis",
+            "Carolina @ Arizona",
+            "Philadelphia @ Kansas City",
+            "Atlanta @ Minnesota",
+            "Tampa Bay @ Houston",
+            "Los Angeles @ Las Vegas"
+        ];
 
-            // Loop through all the matchups in data
-            for (let i = 0; i < data.length; i += 3) {
-                const homeTeam = data[i];
-                const awayTeam = data[i + 1];
+        // NFL team synonyms to abbreviation mapping (full names, city names, and abbreviations)
+        const teamAbbr = {
+            "Buffalo": "BUF", "Bills": "BUF", "BUF": "BUF",
+            "Miami": "MIA", "Dolphins": "MIA", "MIA": "MIA",
+            "New Orleans": "NO", "Saints": "NO", "NO": "NO",
+            "Dallas": "DAL", "Cowboys": "DAL", "DAL": "DAL",
+            "Tampa Bay": "TB", "Buccaneers": "TB", "TB": "TB",
+            "Detroit": "DET", "Lions": "DET", "DET": "DET",
+            "Indianapolis": "IND", "Colts": "IND", "IND": "IND",
+            "Green Bay": "GB", "Packers": "GB", "GB": "GB",
+            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ", "New York": "NYJ", // For Jets context
+            "Tennessee": "TEN", "Titans": "TEN", "TEN": "TEN",
+            "San Francisco": "SF", "49ers": "SF", "SF": "SF",
+            "Minnesota": "MIN", "Vikings": "MIN", "MIN": "MIN",
+            "Seattle": "SEA", "Seahawks": "SEA", "SEA": "SEA",
+            "New England": "NE", "Patriots": "NE", "NE": "NE",
+            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG", "New York": "NYG", // For Giants context (overridden per matchup)
+            "Washington": "WAS", "Commanders": "WAS", "WAS": "WAS",
+            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC", "Los Angeles": "LAC", // For Chargers context
+            "Carolina": "CAR", "Panthers": "CAR", "CAR": "CAR",
+            "Cleveland": "CLE", "Browns": "CLE", "CLE": "CLE",
+            "Jacksonville": "JAX", "Jaguars": "JAX", "JAX": "JAX",
+            "Las Vegas": "LV", "Raiders": "LV", "LV": "LV",
+            "Baltimore": "BAL", "Ravens": "BAL", "BAL": "BAL",
+            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR", "Los Angeles": "LAR", // For Rams context (overridden per matchup)
+            "Arizona": "ARI", "Cardinals": "ARI", "ARI": "ARI",
+            "Pittsburgh": "PIT", "Steelers": "PIT", "PIT": "PIT",
+            "Denver": "DEN", "Broncos": "DEN", "DEN": "DEN",
+            "Cincinnati": "CIN", "Bengals": "CIN", "CIN": "CIN",
+            "Kansas City": "KC", "Chiefs": "KC", "KC": "KC",
+            "Chicago": "CHI", "Bears": "CHI", "CHI": "CHI",
+            "Houston": "HOU", "Texans": "HOU", "HOU": "HOU",
+            "Atlanta": "ATL", "Falcons": "ATL", "ATL": "ATL",
+            "Philadelphia": "PHI", "Eagles": "PHI", "PHI": "PHI"
+        };
 
-                if (homeTeam && awayTeam && awayTeam.Team) {
-                    const matchupDiv = document.createElement("div");
-                    matchupDiv.className = "matchup";
+        // Function to get abbreviation from any synonym
+        function getAbbr(input) {
+            const normalized = input.trim().toLowerCase();
+            for (let key in teamAbbr) {
+                if (key.toLowerCase() === normalized || (teamAbbr[key].toLowerCase() === normalized)) {
+                    return teamAbbr[key];
+                }
+            }
+            return "UNK"; // Unknown if no match
+        }
 
-                    const matchupText = document.createElement("h4");
-                    matchupText.textContent = `${homeTeam.Team} vs ${awayTeam.Team}`;
-                    matchupText.style.margin = "0";
-                    matchupDiv.appendChild(matchupText);
+        // Function to abbreviate a full matchup
+        function abbreviateMatchup(m) {
+            const [away, home] = m.split(' @ ');
+            return getAbbr(away) + ' @ ' + getAbbr(home);
+        }
 
-                    [homeTeam, awayTeam].forEach((team, index) => {
-                        const teamDiv = document.createElement("div");
-                        teamDiv.className = "team";
+        // Function to get first 5 letters of fantasy team name, ignoring ' and .
+        function getFirstFiveLetters(teamName) {
+            return teamName.replace(/['.]/g, '').slice(0, 5);
+        }
 
-                        // Moneyline bet checkbox
-                        const moneylineCheckbox = document.createElement("input");
-                        moneylineCheckbox.type = "checkbox";
-                        moneylineCheckbox.id = `moneyline-checkbox-${i + index}`;
-                        moneylineCheckbox.dataset.index = i + index;
-                        moneylineCheckbox.onclick = () => toggleAmountInput(i + index, 'moneyline');
+        // Function to get teams from matchup
+        function getTeamsFromMatchup(matchup) {
+            const [away, home] = matchup.split(' @ ');
+            return [away.trim(), home.trim()];
+        }
 
-                        const moneylineLabel = document.createElement("label");
-                        moneylineLabel.htmlFor = `moneyline-checkbox-${i + index}`;
-                        moneylineLabel.textContent = `${team.Team} (Moneyline Odds: ${team["Moneyline odds"]})`;
+        // Function to is valid team input
+        function isValidTeam(input) {
+            return getAbbr(input) !== "UNK";
+        }
 
-                        const moneylineInput = document.createElement("input");
-                        moneylineInput.type = "number";
-                        moneylineInput.className = "input-amount";
-                        moneylineInput.id = `moneyline-amount-${i + index}`;
-                        moneylineInput.disabled = true;
+        // Sanitize key for Firebase (replace invalid chars)
+        function sanitizeKey(key) {
+            return key.replace(/[.#$[\]/]/g, '_');
+        }
 
-                        teamDiv.appendChild(moneylineCheckbox);
-                        teamDiv.appendChild(moneylineLabel);
-                        teamDiv.appendChild(moneylineInput);
+        // Populate matchup dropdown with full names
+        const matchupSelect = document.getElementById('matchupSelect');
+        matchups.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m;
+            option.text = m;
+            matchupSelect.appendChild(option);
+        });
 
-                        // Spread bet checkbox
-                        const spreadCheckbox = document.createElement("input");
-                        spreadCheckbox.type = "checkbox";
-                        spreadCheckbox.id = `spread-checkbox-${i + index}`;
-                        spreadCheckbox.dataset.index = i + index;
-                        spreadCheckbox.onclick = () => toggleAmountInput(i + index, 'spread');
+        // Add matchup columns to grid header with abbreviations
+        const headerRow = document.getElementById('gridTable').querySelector('thead tr');
+        matchups.forEach(m => {
+            const th = document.createElement('th');
+            th.textContent = abbreviateMatchup(m);
+            headerRow.appendChild(th);
+        });
 
-                        const spreadLabel = document.createElement("label");
-                        spreadLabel.htmlFor = `spread-checkbox-${i + index}`;
-                        spreadLabel.textContent = `${team.Team} (Spread: ${team.Spread} Odds: ${team["Spread odds"]})`;
+        // Dynamic form fields
+        const betTypeSelect = document.getElementById('betTypeSelect');
+        const teamPickDiv = document.getElementById('teamPickDiv');
+        const spreadDiv = document.getElementById('spreadDiv');
+        const overUnderDiv = document.getElementById('overUnderDiv');
+        const teamPickSelect = document.getElementById('teamPickSelect');
+        const spreadSelect = document.getElementById('spreadSelect');
+        const overUnderSelect = document.getElementById('overUnderSelect');
+        const totalInput = document.getElementById('totalInput');
 
-                        const spreadInput = document.createElement("input");
-                        spreadInput.type = "number";
-                        spreadInput.className = "input-amount";
-                        spreadInput.id = `spread-amount-${i + index}`;
-                        spreadInput.disabled = true;
+        betTypeSelect.addEventListener('change', updateFormFields);
+        matchupSelect.addEventListener('change', updateFormFields);
 
-                        teamDiv.appendChild(spreadCheckbox);
-                        teamDiv.appendChild(spreadLabel);
-                        teamDiv.appendChild(spreadInput);
+        function updateFormFields() {
+            teamPickDiv.classList.add('hidden');
+            spreadDiv.classList.add('hidden');
+            overUnderDiv.classList.add('hidden');
+            teamPickSelect.innerHTML = '<option value="">Select team</option>';
+            spreadSelect.innerHTML = '<option value="">Select spread</option>';
 
-                        matchupDiv.appendChild(teamDiv);
+            const type = betTypeSelect.value;
+            const matchup = matchupSelect.value;
+
+            if (!type || !matchup) return;
+
+            const teams = getTeamsFromMatchup(matchup);
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.text = team;
+                teamPickSelect.appendChild(option);
+            });
+
+            if (type === 'Moneyline' || type === 'Spread') {
+                teamPickDiv.classList.remove('hidden');
+            }
+
+            if (type === 'Spread') {
+                spreadDiv.classList.remove('hidden');
+                for (let i = -14.5; i <= 14.5; i += 0.5) {
+                    const value = i === 0 ? 'Default' : (i > 0 ? '+' + i.toFixed(1) : i.toFixed(1));
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.text = value;
+                    spreadSelect.appendChild(option);
+                }
+            }
+
+            if (type === 'Over/Under') {
+                overUnderDiv.classList.remove('hidden');
+            }
+        }
+
+        // Listen for data changes and update dropdown
+        picksRef.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            updateGrid(data);
+            updatePicksTable(data);
+            updateMatchupDropdown(data);
+        });
+
+        function updateMatchupDropdown(data) {
+            const matchupSelect = document.getElementById('matchupSelect');
+            const currentMatchup = matchupSelect.value;
+            matchupSelect.innerHTML = '<option value="">Select matchup</option>';
+            const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
+            matchups.forEach(m => {
+                if (!takenMatchups.has(m)) {
+                    const option = document.createElement('option');
+                    option.value = m;
+                    option.text = m;
+                    matchupSelect.appendChild(option);
+                }
+            });
+            matchupSelect.value = currentMatchup || ''; // Retain current selection if still available
+            if (!matchupSelect.value) updateFormFields(); // Reset form if matchup is taken
+        }
+
+        function updateGrid(data) {
+            const moneylineRow = document.getElementById('moneylineRow');
+            const spreadRow = document.getElementById('spreadRow');
+            const overUnderRow = document.getElementById('overUnderRow');
+            moneylineRow.innerHTML = '<td>Moneyline</td>';
+            spreadRow.innerHTML = '<td>Spread</td>';
+            overUnderRow.innerHTML = '<td>Over/Under</td>';
+
+            matchups.forEach(m => {
+                let pickedFantasyTeamMoneyline = null, pickedFantasyTeamSpread = null, pickedFantasyTeamOverUnder = null;
+                Object.entries(data).forEach(([sanitizedTeam, p]) => {
+                    if (p && p.matchup === m) {
+                        if (p.type === 'Moneyline' && !pickedFantasyTeamMoneyline) {
+                            pickedFantasyTeamMoneyline = p.originalTeam;
+                        }
+                        if (p.type === 'Spread' && !pickedFantasyTeamSpread) {
+                            pickedFantasyTeamSpread = p.originalTeam;
+                        }
+                        if (p.type === 'Over/Under' && !pickedFantasyTeamOverUnder) {
+                            pickedFantasyTeamOverUnder = p.originalTeam;
+                        }
+                    }
+                });
+
+                const mlTd = document.createElement('td');
+                mlTd.className = pickedFantasyTeamMoneyline ? 'red' : 'green';
+                mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : 'Open';
+                moneylineRow.appendChild(mlTd);
+
+                const spTd = document.createElement('td');
+                spTd.className = pickedFantasyTeamSpread ? 'red' : 'green';
+                spTd.textContent = pickedFantasyTeamSpread ? getFirstFiveLetters(pickedFantasyTeamSpread) : 'Open';
+                spreadRow.appendChild(spTd);
+
+                const ouTd = document.createElement('td');
+                ouTd.className = pickedFantasyTeamOverUnder ? 'red' : 'green';
+                ouTd.textContent = pickedFantasyTeamOverUnder ? getFirstFiveLetters(pickedFantasyTeamOverUnder) : 'Open';
+                overUnderRow.appendChild(ouTd);
+            });
+        }
+
+        function updatePicksTable(data) {
+            const tbody = document.getElementById('picksTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            const sortedEntries = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
+            sortedEntries.forEach(([sanitizedTeam, p]) => {
+                if (p) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${p.originalTeam}</td>
+                        <td>${p.matchup}</td>
+                        <td>${p.type}</td>
+                        <td>${p.details}</td>
+                        <td>${p.timestamp || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        function submitPick() {
+            const team = document.getElementById('teamSelect').value;
+            const matchup = document.getElementById('matchupSelect').value;
+            const type = document.getElementById('betTypeSelect').value;
+            let details = '';
+            const result = document.getElementById('result');
+
+            if (!team || !matchup || !type) {
+                result.textContent = 'Please fill the first three fields.';
+                return;
+            }
+
+            const sanitizedTeam = sanitizeKey(team);
+            const originalTeam = team;
+            const teams = getTeamsFromMatchup(matchup);
+
+            // Check if matchup is already taken
+            picksRef.once('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
+                if (takenMatchups.has(matchup)) {
+                    result.textContent = 'This matchup is already taken.';
+                    return;
+                }
+
+                if (type === 'Moneyline') {
+                    const pickedTeam = document.getElementById('teamPickSelect').value;
+                    if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam)) {
+                        result.textContent = 'Invalid team for Moneyline.';
+                        return;
+                    }
+                    details = getAbbr(pickedTeam);
+                } else if (type === 'Spread') {
+                    const pickedTeam = document.getElementById('teamPickSelect').value;
+                    const spread = document.getElementById('spreadSelect').value;
+                    if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam) || !spread) {
+                        result.textContent = 'Invalid team or spread for Spread.';
+                        return;
+                    }
+                    const spreadDisplay = spread === 'Default' ? 'Default' : spread;
+                    details = getAbbr(pickedTeam) + ' ' + spreadDisplay;
+                } else if (type === 'Over/Under') {
+                    const ou = document.getElementById('overUnderSelect').value;
+                    let total = document.getElementById('totalInput').value.trim();
+                    if (!ou) {
+                        result.textContent = 'Please select Over or Under.';
+                        return;
+                    }
+                    if (['X', 'x', 'default', 'Default'].includes(total.toLowerCase())) {
+                        total = 'Default';
+                    } else {
+                        const numTotal = parseFloat(total);
+                        if (isNaN(numTotal) || numTotal <= 0) {
+                            result.textContent = 'Total must be a positive number or "Default".';
+                            return;
+                        }
+                        total = numTotal.toFixed(1);
+                    }
+                    details = ou + ' ' + total;
+                }
+
+                const timestamp = new Date().toLocaleString();
+                picksRef.child(sanitizedTeam).set({ originalTeam, matchup, type, details, timestamp })
+                    .then(() => { result.textContent = 'Pick submitted!'; })
+                    .catch((error) => { 
+                        result.textContent = 'Error submitting pick: ' + error.message; 
+                        console.error('Firebase error:', error);
                     });
-
-                    container.appendChild(matchupDiv);
-                }
-            }
-        }
-
-        function toggleAmountInput(index, betType) {
-            const checkbox = document.getElementById(`${betType}-checkbox-${index}`);
-            const amountInput = document.getElementById(`${betType}-amount-${index}`);
-            amountInput.disabled = !checkbox.checked;
-        }
-
-        function convertToDecimalOdds(odds) {
-            if (odds < 0) {
-                return (100 / Math.abs(odds)) + 1;
-            } else {
-                return (odds / 100) + 1;
-            }
-        }
-
-        function calculateParlay() {
-            const betslipContent = document.getElementById("betslip-content");
-            betslipContent.innerHTML = "";
-
-            let combinedOdds = 1;
-            let betSelected = false;
-            let betslipText = "";
-
-            data.forEach((team, index) => {
-                if (team.Team) {
-                    // Check moneyline bet
-                    const moneylineCheckbox = document.getElementById(`moneyline-checkbox-${index}`);
-                    const moneylineInput = document.getElementById(`moneyline-amount-${index}`);
-
-                    if (moneylineCheckbox.checked) {
-                        betSelected = true;
-                        const amount = parseFloat(moneylineInput.value) || 0;
-                        const decimalOdds = convertToDecimalOdds(team["Moneyline odds"]);
-                        combinedOdds *= decimalOdds;
-
-                        const payout = (amount * (decimalOdds - 1)).toFixed(2); // Individual payout calculation
-                        const betInfo = `${team.Team} (Moneyline) - Odds: ${team["Moneyline odds"]}, Bet Amount: ${amount}, Payout: ${payout}`;
-                        betslipText += betInfo + "\n";
-
-                        const div = document.createElement("div");
-                        div.textContent = betInfo;
-                        betslipContent.appendChild(div);
-                    }
-
-                    // Check spread bet
-                    const spreadCheckbox = document.getElementById(`spread-checkbox-${index}`);
-                    const spreadInput = document.getElementById(`spread-amount-${index}`);
-
-                    if (spreadCheckbox.checked) {
-                        betSelected = true;
-                        const amount = parseFloat(spreadInput.value) || 0;
-                        const decimalOdds = convertToDecimalOdds(team["Spread odds"]);
-                        combinedOdds *= decimalOdds;
-
-                        const payout = (amount * (decimalOdds - 1)).toFixed(2); // Individual payout calculation
-                        const betInfo = `${team.Team} (Spread: ${team.Spread}) - Odds: ${team["Spread odds"]}, Bet Amount: ${amount}, Payout: ${payout}`;
-                        betslipText += betInfo + "\n";
-
-                        const div = document.createElement("div");
-                        div.textContent = betInfo;
-                        betslipContent.appendChild(div);
-                    }
-                }
-            });
-
-            if (betSelected) {
-                const wager = parseFloat(document.getElementById('parlay-amount').value) || 0;
-                if (wager > 0) {
-                    const payout = (wager * (combinedOdds - 1)).toFixed(2);
-                    const payoutDiv = document.getElementById("parlay-payout");
-                    payoutDiv.innerHTML = `<strong>Parlay Payout: ${payout}</strong>`;
-                }
-            } else {
-                betslipContent.textContent = "No bets selected!";
-            }
-        }
-
-        function clearForm() {
-            data.forEach((_, index) => {
-                const moneylineCheckbox = document.getElementById(`moneyline-checkbox-${index}`);
-                const moneylineInput = document.getElementById(`moneyline-amount-${index}`);
-                const spreadCheckbox = document.getElementById(`spread-checkbox-${index}`);
-                const spreadInput = document.getElementById(`spread-amount-${index}`);
-
-                if (moneylineCheckbox) {
-                    moneylineCheckbox.checked = false;
-                    moneylineInput.value = "";
-                    moneylineInput.disabled = true;
-                }
-
-                if (spreadCheckbox) {
-                    spreadCheckbox.checked = false;
-                    spreadInput.value = "";
-                    spreadInput.disabled = true;
-                }
-            });
-
-            const betslipContent = document.getElementById("betslip-content");
-            betslipContent.innerHTML = "";
-
-            const payoutDiv = document.getElementById("parlay-payout");
-            payoutDiv.innerHTML = "";
-            document.getElementById('parlay-amount').value = "";
-        }
-
-        function copyToClipboard() {
-            const betslipContent = document.getElementById("betslip-content").innerText;
-            navigator.clipboard.writeText(betslipContent).then(() => {
-                alert("Bet slip copied to clipboard!");
-            }).catch(err => {
-                console.error("Could not copy text: ", err);
             });
         }
-
-        createMatchups();
     </script>
 </body>
 </html>
