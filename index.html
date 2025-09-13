@@ -18,15 +18,16 @@
         button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
         #result { color: red; }
         .hidden { display: none; }
+        #debug { color: red; margin-top: 20px; border: 1px solid red; padding: 10px; white-space: pre-wrap; }
         @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy Parlay Picks - Week X</h2>
+    <h2>Fantasy Parlay Picks - Week 2</h2>
     
-    <h3>Availability Grid (Green = Open, Red = Picked)</h3>
+    <h3>Availability Grid (Green = Open Odds, Red = Picked)</h3>
     <table id="gridTable">
         <thead>
             <tr>
@@ -102,8 +103,14 @@
         <button onclick="submitPick()">Submit Pick</button>
         <p id="result"></p>
     </div>
+    <div id="debug"></div>
 
     <script>
+        const debugDiv = document.getElementById('debug');
+        function logDebug(message) {
+            debugDiv.innerHTML += message + '\n';
+        }
+
         // Replace with your Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
@@ -115,13 +122,33 @@
             appId: "1:502012052829:web:f34f8ce9e0fb475d4f94b4",
             measurementId: "G-5Y18HXVH23"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const picksRef = db.ref('picks');
 
-        // Hardcode matchups for the week (update manually each week) - order matches the image
+        if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_FIREBASE_API_KEY") {
+            logDebug("Error: Firebase API key is missing or invalid.");
+        } else {
+            logDebug("Firebase API key is set.");
+        }
+
+        let firebaseInitialized = false;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            firebaseInitialized = true;
+            logDebug("Firebase initialized successfully.");
+        } catch (error) {
+            logDebug("Error initializing Firebase: " + error.message);
+        }
+
+        let db, picksRef;
+        if (firebaseInitialized) {
+            db = firebase.database();
+            picksRef = db.ref('picks');
+            logDebug("Firebase database connected.");
+        } else {
+            logDebug("Firebase not initialized, skipping database operations.");
+        }
+
+        // Hardcode matchups for Week 2 (excluding Washington @ Green Bay)
         const matchups = [
-            "Washington @ Green Bay",
             "Jacksonville @ Cincinnati",
             "New York @ Dallas",
             "Chicago @ Detroit",
@@ -139,7 +166,26 @@
             "Los Angeles @ Las Vegas"
         ];
 
-        // NFL team synonyms to abbreviation mapping (full names, city names, and abbreviations)
+        // Static odds based on web search (approximate for Week 2, 2025)
+        const staticOdds = {
+            "Jacksonville @ Cincinnati": { moneyline: "CIN -180", spread: "CIN -4.0", overUnder: 47.0 },
+            "New York @ Dallas": { moneyline: "DAL -250", spread: "DAL -5.5", overUnder: 43.0 },
+            "Chicago @ Detroit": { moneyline: "DET -180", spread: "DET -3.5", overUnder: 46.0 },
+            "Los Angeles @ Tennessee": { moneyline: "TEN -120", spread: "TEN -1.5", overUnder: 44.0 },
+            "New England @ Miami": { moneyline: "MIA -140", spread: "MIA -2.5", overUnder: 48.0 },
+            "San Francisco @ New Orleans": { moneyline: "SF -170", spread: "SF -3.0", overUnder: 45.5 },
+            "Buffalo @ New York": { moneyline: "BUF -200", spread: "BUF -4.0", overUnder: 42.0 },
+            "Seattle @ Pittsburgh": { moneyline: "PIT -130", spread: "PIT -2.0", overUnder: 46.5 },
+            "Cleveland @ Baltimore": { moneyline: "BAL -190", spread: "BAL -3.5", overUnder: 44.5 },
+            "Denver @ Indianapolis": { moneyline: "IND -110", spread: "IND -1.0", overUnder: 43.5 },
+            "Carolina @ Arizona": { moneyline: "ARI -160", spread: "ARI -2.5", overUnder: 47.5 },
+            "Philadelphia @ Kansas City": { moneyline: "KC -220", spread: "KC -4.5", overUnder: 46.0 },
+            "Atlanta @ Minnesota": { moneyline: "MIN -140", spread: "MIN -2.5", overUnder: 45.0 },
+            "Tampa Bay @ Houston": { moneyline: "TB -170", spread: "TB -3.0", overUnder: 44.0 },
+            "Los Angeles @ Las Vegas": { moneyline: "LV -130", spread: "LV -2.0", overUnder: 47.0 }
+        };
+
+        // NFL team synonyms to abbreviation mapping
         const teamAbbr = {
             "Buffalo": "BUF", "Bills": "BUF", "BUF": "BUF",
             "Miami": "MIA", "Dolphins": "MIA", "MIA": "MIA",
@@ -149,21 +195,21 @@
             "Detroit": "DET", "Lions": "DET", "DET": "DET",
             "Indianapolis": "IND", "Colts": "IND", "IND": "IND",
             "Green Bay": "GB", "Packers": "GB", "GB": "GB",
-            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ", "New York": "NYJ", // For Jets context
+            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ", "New York": "NYJ",
             "Tennessee": "TEN", "Titans": "TEN", "TEN": "TEN",
             "San Francisco": "SF", "49ers": "SF", "SF": "SF",
             "Minnesota": "MIN", "Vikings": "MIN", "MIN": "MIN",
             "Seattle": "SEA", "Seahawks": "SEA", "SEA": "SEA",
             "New England": "NE", "Patriots": "NE", "NE": "NE",
-            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG", "New York": "NYG", // For Giants context (overridden per matchup)
+            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG", "New York": "NYG",
             "Washington": "WAS", "Commanders": "WAS", "WAS": "WAS",
-            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC", "Los Angeles": "LAC", // For Chargers context
+            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC", "Los Angeles": "LAC",
             "Carolina": "CAR", "Panthers": "CAR", "CAR": "CAR",
             "Cleveland": "CLE", "Browns": "CLE", "CLE": "CLE",
             "Jacksonville": "JAX", "Jaguars": "JAX", "JAX": "JAX",
             "Las Vegas": "LV", "Raiders": "LV", "LV": "LV",
             "Baltimore": "BAL", "Ravens": "BAL", "BAL": "BAL",
-            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR", "Los Angeles": "LAR", // For Rams context (overridden per matchup)
+            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR", "Los Angeles": "LAR",
             "Arizona": "ARI", "Cardinals": "ARI", "ARI": "ARI",
             "Pittsburgh": "PIT", "Steelers": "PIT", "PIT": "PIT",
             "Denver": "DEN", "Broncos": "DEN", "DEN": "DEN",
@@ -285,10 +331,14 @@
 
         // Listen for data changes and update dropdown
         picksRef.on('value', (snapshot) => {
-            const data = snapshot.val() || {};
-            updateGrid(data);
-            updatePicksTable(data);
-            updateMatchupDropdown(data);
+            try {
+                const data = snapshot.val() || {};
+                updateGrid(data);
+                updatePicksTable(data);
+                updateMatchupDropdown(data);
+            } catch (error) {
+                logDebug("Error in Firebase listener: " + error.message);
+            }
         });
 
         function updateMatchupDropdown(data) {
@@ -332,19 +382,22 @@
                     }
                 });
 
+                const odds = staticOdds[m] || { moneyline: "Open", spread: "Open", overUnder: "Open" };
                 const mlTd = document.createElement('td');
                 mlTd.className = pickedFantasyTeamMoneyline ? 'red' : 'green';
-                mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : 'Open';
+                // Extract abbreviated team name from moneyline string (e.g., "CIN -180" -> "CIN")
+                const moneylineAbbr = odds.moneyline.split(' ')[0];
+                mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : odds.moneyline;
                 moneylineRow.appendChild(mlTd);
 
                 const spTd = document.createElement('td');
                 spTd.className = pickedFantasyTeamSpread ? 'red' : 'green';
-                spTd.textContent = pickedFantasyTeamSpread ? getFirstFiveLetters(pickedFantasyTeamSpread) : 'Open';
+                spTd.textContent = pickedFantasyTeamSpread ? getFirstFiveLetters(pickedFantasyTeamSpread) : odds.spread;
                 spreadRow.appendChild(spTd);
 
                 const ouTd = document.createElement('td');
                 ouTd.className = pickedFantasyTeamOverUnder ? 'red' : 'green';
-                ouTd.textContent = pickedFantasyTeamOverUnder ? getFirstFiveLetters(pickedFantasyTeamOverUnder) : 'Open';
+                ouTd.textContent = pickedFantasyTeamOverUnder ? getFirstFiveLetters(pickedFantasyTeamOverUnder) : odds.overUnder.toString();
                 overUnderRow.appendChild(ouTd);
             });
         }
@@ -388,56 +441,60 @@
 
             // Check if matchup is already taken
             picksRef.once('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
-                if (takenMatchups.has(matchup)) {
-                    result.textContent = 'This matchup is already taken.';
-                    return;
-                }
+                try {
+                    const data = snapshot.val() || {};
+                    const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
+                    if (takenMatchups.has(matchup)) {
+                        result.textContent = 'This matchup is already taken.';
+                        return;
+                    }
 
-                if (type === 'Moneyline') {
-                    const pickedTeam = document.getElementById('teamPickSelect').value;
-                    if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam)) {
-                        result.textContent = 'Invalid team for Moneyline.';
-                        return;
-                    }
-                    details = getAbbr(pickedTeam);
-                } else if (type === 'Spread') {
-                    const pickedTeam = document.getElementById('teamPickSelect').value;
-                    const spread = document.getElementById('spreadSelect').value;
-                    if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam) || !spread) {
-                        result.textContent = 'Invalid team or spread for Spread.';
-                        return;
-                    }
-                    const spreadDisplay = spread === 'Default' ? 'Default' : spread;
-                    details = getAbbr(pickedTeam) + ' ' + spreadDisplay;
-                } else if (type === 'Over/Under') {
-                    const ou = document.getElementById('overUnderSelect').value;
-                    let total = document.getElementById('totalInput').value.trim();
-                    if (!ou) {
-                        result.textContent = 'Please select Over or Under.';
-                        return;
-                    }
-                    if (['X', 'x', 'default', 'Default'].includes(total.toLowerCase())) {
-                        total = 'Default';
-                    } else {
-                        const numTotal = parseFloat(total);
-                        if (isNaN(numTotal) || numTotal <= 0) {
-                            result.textContent = 'Total must be a positive number or "Default".';
+                    if (type === 'Moneyline') {
+                        const pickedTeam = document.getElementById('teamPickSelect').value;
+                        if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam)) {
+                            result.textContent = 'Invalid team for Moneyline.';
                             return;
                         }
-                        total = numTotal.toFixed(1);
+                        details = getAbbr(pickedTeam);
+                    } else if (type === 'Spread') {
+                        const pickedTeam = document.getElementById('teamPickSelect').value;
+                        const spread = document.getElementById('spreadSelect').value;
+                        if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam) || !spread) {
+                            result.textContent = 'Invalid team or spread for Spread.';
+                            return;
+                        }
+                        const spreadDisplay = spread === 'Default' ? 'Default' : spread;
+                        details = getAbbr(pickedTeam) + ' ' + spreadDisplay;
+                    } else if (type === 'Over/Under') {
+                        const ou = document.getElementById('overUnderSelect').value;
+                        let total = document.getElementById('totalInput').value.trim();
+                        if (!ou) {
+                            result.textContent = 'Please select Over or Under.';
+                            return;
+                        }
+                        if (['X', 'x', 'default', 'Default'].includes(total.toLowerCase())) {
+                            total = 'Default';
+                        } else {
+                            const numTotal = parseFloat(total);
+                            if (isNaN(numTotal) || numTotal <= 0) {
+                                result.textContent = 'Total must be a positive number or "Default".';
+                                return;
+                            }
+                            total = numTotal.toFixed(1);
+                        }
+                        details = ou + ' ' + total;
                     }
-                    details = ou + ' ' + total;
-                }
 
-                const timestamp = new Date().toLocaleString();
-                picksRef.child(sanitizedTeam).set({ originalTeam, matchup, type, details, timestamp })
-                    .then(() => { result.textContent = 'Pick submitted!'; })
-                    .catch((error) => { 
-                        result.textContent = 'Error submitting pick: ' + error.message; 
-                        console.error('Firebase error:', error);
-                    });
+                    const timestamp = new Date().toLocaleString();
+                    picksRef.child(sanitizedTeam).set({ originalTeam, matchup, type, details, timestamp })
+                        .then(() => { result.textContent = 'Pick submitted!'; })
+                        .catch((error) => { 
+                            result.textContent = 'Error submitting pick: ' + error.message; 
+                            console.error('Firebase error:', error);
+                        });
+                } catch (error) {
+                    logDebug("Error in submitPick: " + error.message);
+                }
             });
         }
     </script>
