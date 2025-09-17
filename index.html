@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Parlay Picker</title>
+    <title>Fantasy Parlay Picker - Week 3</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -18,14 +18,13 @@
         button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
         #result { color: red; }
         .hidden { display: none; }
-        #debug { color: red; margin-top: 20px; border: 1px solid red; padding: 10px; white-space: pre-wrap; }
         @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy Parlay Picks - Week 2</h2>
+    <h2>Fantasy Parlay Picks - Week 3</h2>
     
     <h3>Availability Grid (Green = Open Odds, Red = Picked)</h3>
     <table id="gridTable">
@@ -81,6 +80,7 @@
             <option value="Moneyline">Moneyline</option>
             <option value="Spread">Spread</option>
             <option value="Over/Under">Over/Under</option>
+            <option value="Other">Other</option>
         </select>
         <div id="teamPickDiv" class="hidden">
             <select id="teamPickSelect">
@@ -100,17 +100,14 @@
             </select>
             <input type="text" id="totalInput" value="Default" placeholder="Total (Default = default)">
         </div>
+        <div id="otherDiv" class="hidden">
+            <input type="text" id="otherInput" placeholder="Enter custom bet">
+        </div>
         <button onclick="submitPick()">Submit Pick</button>
         <p id="result"></p>
     </div>
-    <div id="debug"></div>
 
     <script>
-        const debugDiv = document.getElementById('debug');
-        function logDebug(message) {
-            debugDiv.innerHTML += message + '\n';
-        }
-
         // Replace with your Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
@@ -123,102 +120,88 @@
             measurementId: "G-5Y18HXVH23"
         };
 
-        if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_FIREBASE_API_KEY") {
-            logDebug("Error: Firebase API key is missing or invalid.");
-        } else {
-            logDebug("Firebase API key is set.");
-        }
-
         let firebaseInitialized = false;
         try {
             firebase.initializeApp(firebaseConfig);
             firebaseInitialized = true;
-            logDebug("Firebase initialized successfully.");
         } catch (error) {
-            logDebug("Error initializing Firebase: " + error.message);
+            console.error("Error initializing Firebase: ", error);
         }
 
         let db, picksRef;
         if (firebaseInitialized) {
             db = firebase.database();
-            picksRef = db.ref('picks');
-            logDebug("Firebase database connected.");
-        } else {
-            logDebug("Firebase not initialized, skipping database operations.");
+            picksRef = db.ref('picks/week3'); // Separate entry for Week 3
         }
 
-        // Hardcode matchups for Week 2 (excluding Washington @ Green Bay)
+        // Hardcode matchups for Week 3 in kickoff order (Sept 18-22, 2025)
         const matchups = [
-            "Jacksonville @ Cincinnati",
-            "New York @ Dallas",
-            "Chicago @ Detroit",
-            "Los Angeles @ Tennessee",
-            "New England @ Miami",
-            "San Francisco @ New Orleans",
-            "Buffalo @ New York",
-            "Seattle @ Pittsburgh",
-            "Cleveland @ Baltimore",
-            "Denver @ Indianapolis",
-            "Carolina @ Arizona",
-            "Philadelphia @ Kansas City",
-            "Atlanta @ Minnesota",
-            "Tampa Bay @ Houston",
-            "Los Angeles @ Las Vegas"
+            "Miami Dolphins @ Buffalo Bills",
+            "Indianapolis Colts @ Tennessee Titans",
+            "Cincinnati Bengals @ Minnesota Vikings",
+            "New York Jets @ Tampa Bay Buccaneers",
+            "Atlanta Falcons @ Carolina Panthers",
+            "Green Bay Packers @ Cleveland Browns",
+            "New Orleans Saints @ Seattle Seahawks",
+            "Dallas Cowboys @ Chicago Bears",
+            "Los Angeles Rams @ Philadelphia Eagles",
+            "Los Angeles Chargers @ Denver Broncos",
+            "Detroit Lions @ Baltimore Ravens",
+            "Jacksonville Jaguars @ Kansas City Chiefs",
+            "Houston Texans @ Las Vegas Raiders"
         ];
 
-        // Static odds based on web search (approximate for Week 2, 2025)
+        // Static odds based on web search (approximate for Week 3, 2025)
         const staticOdds = {
-            "Jacksonville @ Cincinnati": { moneyline: "CIN -180", spread: "CIN -4.0", overUnder: 47.0 },
-            "New York @ Dallas": { moneyline: "DAL -250", spread: "DAL -5.5", overUnder: 43.0 },
-            "Chicago @ Detroit": { moneyline: "DET -180", spread: "DET -3.5", overUnder: 46.0 },
-            "Los Angeles @ Tennessee": { moneyline: "TEN -120", spread: "TEN -1.5", overUnder: 44.0 },
-            "New England @ Miami": { moneyline: "MIA -140", spread: "MIA -2.5", overUnder: 48.0 },
-            "San Francisco @ New Orleans": { moneyline: "SF -170", spread: "SF -3.0", overUnder: 45.5 },
-            "Buffalo @ New York": { moneyline: "BUF -200", spread: "BUF -4.0", overUnder: 42.0 },
-            "Seattle @ Pittsburgh": { moneyline: "PIT -130", spread: "PIT -2.0", overUnder: 46.5 },
-            "Cleveland @ Baltimore": { moneyline: "BAL -190", spread: "BAL -3.5", overUnder: 44.5 },
-            "Denver @ Indianapolis": { moneyline: "IND -110", spread: "IND -1.0", overUnder: 43.5 },
-            "Carolina @ Arizona": { moneyline: "ARI -160", spread: "ARI -2.5", overUnder: 47.5 },
-            "Philadelphia @ Kansas City": { moneyline: "KC -220", spread: "KC -4.5", overUnder: 46.0 },
-            "Atlanta @ Minnesota": { moneyline: "MIN -140", spread: "MIN -2.5", overUnder: 45.0 },
-            "Tampa Bay @ Houston": { moneyline: "TB -170", spread: "TB -3.0", overUnder: 44.0 },
-            "Los Angeles @ Las Vegas": { moneyline: "LV -130", spread: "LV -2.0", overUnder: 47.0 }
+            "Miami Dolphins @ Buffalo Bills": { moneyline: "BUF -900", spread: "BUF -9.5", overUnder: 51.5 },
+            "Indianapolis Colts @ Tennessee Titans": { moneyline: "IND -120", spread: "IND -1.5", overUnder: 44.0 },
+            "Cincinnati Bengals @ Minnesota Vikings": { moneyline: "MIN -150", spread: "MIN -3.0", overUnder: 42.5 },
+            "New York Jets @ Tampa Bay Buccaneers": { moneyline: "TB -170", spread: "TB -3.0", overUnder: 45.0 },
+            "Atlanta Falcons @ Carolina Panthers": { moneyline: "ATL -200", spread: "ATL -4.5", overUnder: 43.5 },
+            "Green Bay Packers @ Cleveland Browns": { moneyline: "GB -450", spread: "GB -6.5", overUnder: 41.5 },
+            "New Orleans Saints @ Seattle Seahawks": { moneyline: "SEA -130", spread: "SEA -2.0", overUnder: 46.5 },
+            "Dallas Cowboys @ Chicago Bears": { moneyline: "DAL -180", spread: "DAL -3.5", overUnder: 45.0 },
+            "Los Angeles Rams @ Philadelphia Eagles": { moneyline: "PHI -220", spread: "PHI -4.5", overUnder: 46.0 },
+            "Los Angeles Chargers @ Denver Broncos": { moneyline: "DEN -110", spread: "DEN -1.0", overUnder: 43.5 },
+            "Detroit Lions @ Baltimore Ravens": { moneyline: "BAL -190", spread: "BAL -3.5", overUnder: 44.5 },
+            "Jacksonville Jaguars @ Kansas City Chiefs": { moneyline: "KC -250", spread: "KC -5.5", overUnder: 47.5 },
+            "Houston Texans @ Las Vegas Raiders": { moneyline: "LV -160", spread: "LV -2.5", overUnder: 45.5 }
         };
 
-        // NFL team synonyms to abbreviation mapping
+        // NFL team synonyms to abbreviation mapping (expanded for full team names)
         const teamAbbr = {
-            "Buffalo": "BUF", "Bills": "BUF", "BUF": "BUF",
-            "Miami": "MIA", "Dolphins": "MIA", "MIA": "MIA",
-            "New Orleans": "NO", "Saints": "NO", "NO": "NO",
-            "Dallas": "DAL", "Cowboys": "DAL", "DAL": "DAL",
-            "Tampa Bay": "TB", "Buccaneers": "TB", "TB": "TB",
-            "Detroit": "DET", "Lions": "DET", "DET": "DET",
-            "Indianapolis": "IND", "Colts": "IND", "IND": "IND",
-            "Green Bay": "GB", "Packers": "GB", "GB": "GB",
-            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ", "New York": "NYJ",
-            "Tennessee": "TEN", "Titans": "TEN", "TEN": "TEN",
-            "San Francisco": "SF", "49ers": "SF", "SF": "SF",
-            "Minnesota": "MIN", "Vikings": "MIN", "MIN": "MIN",
-            "Seattle": "SEA", "Seahawks": "SEA", "SEA": "SEA",
-            "New England": "NE", "Patriots": "NE", "NE": "NE",
-            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG", "New York": "NYG",
-            "Washington": "WAS", "Commanders": "WAS", "WAS": "WAS",
-            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC", "Los Angeles": "LAC",
-            "Carolina": "CAR", "Panthers": "CAR", "CAR": "CAR",
-            "Cleveland": "CLE", "Browns": "CLE", "CLE": "CLE",
-            "Jacksonville": "JAX", "Jaguars": "JAX", "JAX": "JAX",
-            "Las Vegas": "LV", "Raiders": "LV", "LV": "LV",
-            "Baltimore": "BAL", "Ravens": "BAL", "BAL": "BAL",
-            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR", "Los Angeles": "LAR",
-            "Arizona": "ARI", "Cardinals": "ARI", "ARI": "ARI",
-            "Pittsburgh": "PIT", "Steelers": "PIT", "PIT": "PIT",
-            "Denver": "DEN", "Broncos": "DEN", "DEN": "DEN",
-            "Cincinnati": "CIN", "Bengals": "CIN", "CIN": "CIN",
-            "Kansas City": "KC", "Chiefs": "KC", "KC": "KC",
-            "Chicago": "CHI", "Bears": "CHI", "CHI": "CHI",
-            "Houston": "HOU", "Texans": "HOU", "HOU": "HOU",
-            "Atlanta": "ATL", "Falcons": "ATL", "ATL": "ATL",
-            "Philadelphia": "PHI", "Eagles": "PHI", "PHI": "PHI"
+            "Miami Dolphins": "MIA", "Dolphins": "MIA", "MIA": "MIA",
+            "Buffalo Bills": "BUF", "Bills": "BUF", "BUF": "BUF",
+            "New Orleans Saints": "NO", "Saints": "NO", "NO": "NO",
+            "Dallas Cowboys": "DAL", "Cowboys": "DAL", "DAL": "DAL",
+            "Tampa Bay Buccaneers": "TB", "Buccaneers": "TB", "TB": "TB",
+            "Detroit Lions": "DET", "Lions": "DET", "DET": "DET",
+            "Indianapolis Colts": "IND", "Colts": "IND", "IND": "IND",
+            "Green Bay Packers": "GB", "Packers": "GB", "GB": "GB",
+            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ",
+            "Tennessee Titans": "TEN", "Titans": "TEN", "TEN": "TEN",
+            "San Francisco 49ers": "SF", "49ers": "SF", "SF": "SF",
+            "Minnesota Vikings": "MIN", "Vikings": "MIN", "MIN": "MIN",
+            "Seattle Seahawks": "SEA", "Seahawks": "SEA", "SEA": "SEA",
+            "New England Patriots": "NE", "Patriots": "NE", "NE": "NE",
+            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG",
+            "Washington Commanders": "WAS", "Commanders": "WAS", "WAS": "WAS",
+            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC",
+            "Carolina Panthers": "CAR", "Panthers": "CAR", "CAR": "CAR",
+            "Cleveland Browns": "CLE", "Browns": "CLE", "CLE": "CLE",
+            "Jacksonville Jaguars": "JAX", "Jaguars": "JAX", "JAX": "JAX",
+            "Las Vegas Raiders": "LV", "Raiders": "LV", "LV": "LV",
+            "Baltimore Ravens": "BAL", "Ravens": "BAL", "BAL": "BAL",
+            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR",
+            "Arizona Cardinals": "ARI", "Cardinals": "ARI", "ARI": "ARI",
+            "Pittsburgh Steelers": "PIT", "Steelers": "PIT", "PIT": "PIT",
+            "Denver Broncos": "DEN", "Broncos": "DEN", "DEN": "DEN",
+            "Cincinnati Bengals": "CIN", "Bengals": "CIN", "CIN": "CIN",
+            "Kansas City Chiefs": "KC", "Chiefs": "KC", "KC": "KC",
+            "Chicago Bears": "CHI", "Bears": "CHI", "CHI": "CHI",
+            "Houston Texans": "HOU", "Texans": "HOU", "HOU": "HOU",
+            "Atlanta Falcons": "ATL", "Falcons": "ATL", "ATL": "ATL",
+            "Philadelphia Eagles": "PHI", "Eagles": "PHI", "PHI": "PHI"
         };
 
         // Function to get abbreviation from any synonym
@@ -229,13 +212,16 @@
                     return teamAbbr[key];
                 }
             }
+            console.error(`No abbreviation found for: ${input}`);
             return "UNK"; // Unknown if no match
         }
 
         // Function to abbreviate a full matchup
         function abbreviateMatchup(m) {
             const [away, home] = m.split(' @ ');
-            return getAbbr(away) + ' @ ' + getAbbr(home);
+            const awayAbbr = getAbbr(away);
+            const homeAbbr = getAbbr(home);
+            return `${awayAbbr} @ ${homeAbbr}`;
         }
 
         // Function to get first 5 letters of fantasy team name, ignoring ' and .
@@ -337,7 +323,7 @@
                 updatePicksTable(data);
                 updateMatchupDropdown(data);
             } catch (error) {
-                logDebug("Error in Firebase listener: " + error.message);
+                console.error("Error in Firebase listener: ", error);
             }
         });
 
@@ -385,7 +371,7 @@
                 const odds = staticOdds[m] || { moneyline: "Open", spread: "Open", overUnder: "Open" };
                 const mlTd = document.createElement('td');
                 mlTd.className = pickedFantasyTeamMoneyline ? 'red' : 'green';
-                // Extract abbreviated team name from moneyline string (e.g., "CIN -180" -> "CIN")
+                // Extract abbreviated team name from moneyline string (e.g., "BUF -900" -> "BUF")
                 const moneylineAbbr = odds.moneyline.split(' ')[0];
                 mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : odds.moneyline;
                 moneylineRow.appendChild(mlTd);
@@ -408,6 +394,7 @@
             const teamSelect = document.getElementById('teamSelect');
             const teams = Array.from(teamSelect.options).slice(1).map(option => option.value); // All teams except the empty option
 
+            // Autopopulate with all fantasy teams, N/A if no pick
             teams.forEach(originalTeam => {
                 const sanitizedTeam = sanitizeKey(originalTeam);
                 const pick = data[sanitizedTeam] || { matchup: "N/A", type: "N/A", details: "N/A", timestamp: "N/A" };
@@ -483,6 +470,13 @@
                             total = numTotal.toFixed(1);
                         }
                         details = ou + ' ' + total;
+                    } else if (type === 'Other') {
+                        const custom = document.getElementById('otherInput').value.trim();
+                        if (!custom) {
+                            result.textContent = 'Please enter custom bet.';
+                            return;
+                        }
+                        details = custom;
                     }
 
                     const timestamp = new Date().toLocaleString();
@@ -493,9 +487,48 @@
                             console.error('Firebase error:', error);
                         });
                 } catch (error) {
-                    logDebug("Error in submitPick: " + error.message);
+                    console.error("Error in submitPick: ", error);
                 }
             });
+        }
+
+        // Add listener for "Other" bet type
+        betTypeSelect.addEventListener('change', () => {
+            const type = betTypeSelect.value;
+            const otherDiv = document.getElementById('otherDiv');
+            if (type === 'Other') {
+                otherDiv.classList.remove('hidden');
+            } else {
+                otherDiv.classList.add('hidden');
+            }
+            updateFormFields();
+        });
+
+        // Add sort dropdown for picks table
+        const picksTableHeader = document.getElementById('picksTable').querySelector('thead');
+        const sortRow = document.createElement('tr');
+        const sortTh = document.createElement('th');
+        sortTh.colSpan = 5;
+        const sortSelect = document.createElement('select');
+        sortSelect.innerHTML = `
+            <option value="">Sort by</option>
+            <option value="kickoff">Kickoff Date/Time</option>
+            <option value="alphabetical">Matchup Alphabetically</option>
+        `;
+        sortSelect.addEventListener('change', () => sortPicksTable(sortSelect.value));
+        sortTh.appendChild(sortSelect);
+        sortRow.appendChild(sortTh);
+        picksTableHeader.appendChild(sortRow);
+
+        function sortPicksTable(mode) {
+            const tbody = document.getElementById('picksTable').querySelector('tbody');
+            const rows = Array.from(tbody.rows);
+            if (mode === 'kickoff') {
+                rows.sort((a, b) => matchups.indexOf(a.cells[1].textContent) - matchups.indexOf(b.cells[1].textContent));
+            } else if (mode === 'alphabetical') {
+                rows.sort((a, b) => a.cells[1].textContent.localeCompare(b.cells[1].textContent));
+            }
+            rows.forEach(row => tbody.appendChild(row));
         }
     </script>
 </body>
