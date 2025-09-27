@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Parlay Picker - Week 3</title>
+    <title>Fantasy Parlay Picks - Week 4</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -24,7 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy Parlay Picks - Week 3</h2>
+    <h2>Fantasy Parlay Picks - Week 4</h2>
     
     <h3>Availability Grid (Green = Open Odds, Red = Picked)</h3>
     <table id="gridTable">
@@ -131,77 +131,67 @@
         let db, picksRef;
         if (firebaseInitialized) {
             db = firebase.database();
-            picksRef = db.ref('picks/week3'); // Separate entry for Week 3
+            picksRef = db.ref('picks/week4'); // Separate entry for Week 4
         }
 
-        // Hardcode matchups for Week 3 in kickoff order (Sept 18-22, 2025)
+        // Hardcode matchups for Week 4 in kickoff order (Sept 28-29, 2025)
         const matchups = [
-            "Miami Dolphins @ Buffalo Bills",
-            "Indianapolis Colts @ Tennessee Titans",
-            "Cincinnati Bengals @ Minnesota Vikings",
-            "New York Jets @ Tampa Bay Buccaneers",
-            "Atlanta Falcons @ Carolina Panthers",
-            "Green Bay Packers @ Cleveland Browns",
-            "New Orleans Saints @ Seattle Seahawks",
-            "Dallas Cowboys @ Chicago Bears",
-            "Los Angeles Rams @ Philadelphia Eagles",
-            "Los Angeles Chargers @ Denver Broncos",
-            "Detroit Lions @ Baltimore Ravens",
-            "Jacksonville Jaguars @ Kansas City Chiefs",
-            "Houston Texans @ Las Vegas Raiders"
+            "New Orleans Saints @ Buffalo Bills",
+            "Minnesota Vikings @ Pittsburgh Steelers",
+            "Los Angeles Chargers @ New York Giants",
+            "New England Patriots @ Carolina Panthers",
+            "Seattle Seahawks @ Arizona Cardinals",
+            "Philadelphia Eagles @ Los Angeles Rams",
+            "Chicago Bears @ Dallas Cowboys",
+            "Denver Broncos @ Indianapolis Colts",
+            "Baltimore Ravens @ Detroit Lions",
+            "Kansas City Chiefs @ Jacksonville Jaguars",
+            "Houston Texans @ Las Vegas Raiders",
+            "New York Jets @ San Francisco 49ers"
         ];
 
-        // Static odds based on web search (approximate for Week 3, 2025)
+        // Static odds based on web search (approximate for Week 4, 2025)
         const staticOdds = {
-            "Miami Dolphins @ Buffalo Bills": { moneyline: "BUF -900", spread: "BUF -9.5", overUnder: 51.5 },
-            "Indianapolis Colts @ Tennessee Titans": { moneyline: "IND -120", spread: "IND -1.5", overUnder: 44.0 },
-            "Cincinnati Bengals @ Minnesota Vikings": { moneyline: "MIN -150", spread: "MIN -3.0", overUnder: 42.5 },
-            "New York Jets @ Tampa Bay Buccaneers": { moneyline: "TB -170", spread: "TB -3.0", overUnder: 45.0 },
-            "Atlanta Falcons @ Carolina Panthers": { moneyline: "ATL -200", spread: "ATL -4.5", overUnder: 43.5 },
-            "Green Bay Packers @ Cleveland Browns": { moneyline: "GB -450", spread: "GB -6.5", overUnder: 41.5 },
-            "New Orleans Saints @ Seattle Seahawks": { moneyline: "SEA -130", spread: "SEA -2.0", overUnder: 46.5 },
-            "Dallas Cowboys @ Chicago Bears": { moneyline: "DAL -180", spread: "DAL -3.5", overUnder: 45.0 },
-            "Los Angeles Rams @ Philadelphia Eagles": { moneyline: "PHI -220", spread: "PHI -4.5", overUnder: 46.0 },
-            "Los Angeles Chargers @ Denver Broncos": { moneyline: "DEN -110", spread: "DEN -1.0", overUnder: 43.5 },
-            "Detroit Lions @ Baltimore Ravens": { moneyline: "BAL -190", spread: "BAL -3.5", overUnder: 44.5 },
-            "Jacksonville Jaguars @ Kansas City Chiefs": { moneyline: "KC -250", spread: "KC -5.5", overUnder: 47.5 },
-            "Houston Texans @ Las Vegas Raiders": { moneyline: "LV -160", spread: "LV -2.5", overUnder: 45.5 }
+            "New Orleans Saints @ Buffalo Bills": { moneyline: "BUF -1800", spread: "BUF -14.5", overUnder: 47.5 },
+            "Minnesota Vikings @ Pittsburgh Steelers": { moneyline: "MIN -140", spread: "MIN -2.5", overUnder: 40.5 },
+            "Los Angeles Chargers @ New York Giants": { moneyline: "LAC -300", spread: "LAC -6.5", overUnder: 43.5 },
+            "New England Patriots @ Carolina Panthers": { moneyline: "NE -249", spread: "NE -5.5", overUnder: 42.5 },
+            "Seattle Seahawks @ Arizona Cardinals": { moneyline: "SEA -1.5", spread: "SEA -1.5", overUnder: 43.5 },
+            "Philadelphia Eagles @ Los Angeles Rams": { moneyline: "PHI -220", spread: "PHI -4.5", overUnder: 46.0 },
+            "Chicago Bears @ Dallas Cowboys": { moneyline: "DAL -180", spread: "DAL -3.5", overUnder: 45.0 },
+            "Denver Broncos @ Indianapolis Colts": { moneyline: "IND -110", spread: "IND -1.0", overUnder: 43.5 },
+            "Baltimore Ravens @ Detroit Lions": { moneyline: "BAL -190", spread: "BAL -3.5", overUnder: 44.5 },
+            "Kansas City Chiefs @ Jacksonville Jaguars": { moneyline: "KC -250", spread: "KC -5.5", overUnder: 47.5 },
+            "Houston Texans @ Las Vegas Raiders": { moneyline: "LV -160", spread: "LV -2.5", overUnder: 45.5 },
+            "New York Jets @ San Francisco 49ers": { moneyline: "SF -350", spread: "SF -7.5", overUnder: 44.0 }
         };
 
         // NFL team synonyms to abbreviation mapping (expanded for full team names)
         const teamAbbr = {
-            "Miami Dolphins": "MIA", "Dolphins": "MIA", "MIA": "MIA",
-            "Buffalo Bills": "BUF", "Bills": "BUF", "BUF": "BUF",
             "New Orleans Saints": "NO", "Saints": "NO", "NO": "NO",
-            "Dallas Cowboys": "DAL", "Cowboys": "DAL", "DAL": "DAL",
-            "Tampa Bay Buccaneers": "TB", "Buccaneers": "TB", "TB": "TB",
-            "Detroit Lions": "DET", "Lions": "DET", "DET": "DET",
-            "Indianapolis Colts": "IND", "Colts": "IND", "IND": "IND",
-            "Green Bay Packers": "GB", "Packers": "GB", "GB": "GB",
-            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ",
-            "Tennessee Titans": "TEN", "Titans": "TEN", "TEN": "TEN",
-            "San Francisco 49ers": "SF", "49ers": "SF", "SF": "SF",
+            "Buffalo Bills": "BUF", "Bills": "BUF", "BUF": "BUF",
             "Minnesota Vikings": "MIN", "Vikings": "MIN", "MIN": "MIN",
-            "Seattle Seahawks": "SEA", "Seahawks": "SEA", "SEA": "SEA",
-            "New England Patriots": "NE", "Patriots": "NE", "NE": "NE",
-            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG",
-            "Washington Commanders": "WAS", "Commanders": "WAS", "WAS": "WAS",
-            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC",
-            "Carolina Panthers": "CAR", "Panthers": "CAR", "CAR": "CAR",
-            "Cleveland Browns": "CLE", "Browns": "CLE", "CLE": "CLE",
-            "Jacksonville Jaguars": "JAX", "Jaguars": "JAX", "JAX": "JAX",
-            "Las Vegas Raiders": "LV", "Raiders": "LV", "LV": "LV",
-            "Baltimore Ravens": "BAL", "Ravens": "BAL", "BAL": "BAL",
-            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR",
-            "Arizona Cardinals": "ARI", "Cardinals": "ARI", "ARI": "ARI",
             "Pittsburgh Steelers": "PIT", "Steelers": "PIT", "PIT": "PIT",
-            "Denver Broncos": "DEN", "Broncos": "DEN", "DEN": "DEN",
-            "Cincinnati Bengals": "CIN", "Bengals": "CIN", "CIN": "CIN",
-            "Kansas City Chiefs": "KC", "Chiefs": "KC", "KC": "KC",
+            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC",
+            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG",
+            "New England Patriots": "NE", "Patriots": "NE", "NE": "NE",
+            "Carolina Panthers": "CAR", "Panthers": "CAR", "CAR": "CAR",
+            "Seattle Seahawks": "SEA", "Seahawks": "SEA", "SEA": "SEA",
+            "Arizona Cardinals": "ARI", "Cardinals": "ARI", "ARI": "ARI",
+            "Philadelphia Eagles": "PHI", "Eagles": "PHI", "PHI": "PHI",
+            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR",
             "Chicago Bears": "CHI", "Bears": "CHI", "CHI": "CHI",
+            "Dallas Cowboys": "DAL", "Cowboys": "DAL", "DAL": "DAL",
+            "Denver Broncos": "DEN", "Broncos": "DEN", "DEN": "DEN",
+            "Indianapolis Colts": "IND", "Colts": "IND", "IND": "IND",
+            "Baltimore Ravens": "BAL", "Ravens": "BAL", "BAL": "BAL",
+            "Detroit Lions": "DET", "Lions": "DET", "DET": "DET",
+            "Kansas City Chiefs": "KC", "Chiefs": "KC", "KC": "KC",
+            "Jacksonville Jaguars": "JAX", "Jaguars": "JAX", "JAX": "JAX",
             "Houston Texans": "HOU", "Texans": "HOU", "HOU": "HOU",
-            "Atlanta Falcons": "ATL", "Falcons": "ATL", "ATL": "ATL",
-            "Philadelphia Eagles": "PHI", "Eagles": "PHI", "PHI": "PHI"
+            "Las Vegas Raiders": "LV", "Raiders": "LV", "LV": "LV",
+            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ",
+            "San Francisco 49ers": "SF", "49ers": "SF", "SF": "SF"
         };
 
         // Function to get abbreviation from any synonym
@@ -371,7 +361,7 @@
                 const odds = staticOdds[m] || { moneyline: "Open", spread: "Open", overUnder: "Open" };
                 const mlTd = document.createElement('td');
                 mlTd.className = pickedFantasyTeamMoneyline ? 'red' : 'green';
-                // Extract abbreviated team name from moneyline string (e.g., "BUF -900" -> "BUF")
+                // Extract abbreviated team name from moneyline string (e.g., "BUF -1800" -> "BUF")
                 const moneylineAbbr = odds.moneyline.split(' ')[0];
                 mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : odds.moneyline;
                 moneylineRow.appendChild(mlTd);
