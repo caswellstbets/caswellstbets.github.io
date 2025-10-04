@@ -131,10 +131,10 @@
         let db, picksRef;
         if (firebaseInitialized) {
             db = firebase.database();
-            picksRef = db.ref('picks/week5'); // Separate entry for Week 5
+            picksRef = db.ref('picks/week5'); // Separate entry for Week 4
         }
 
-        // Hardcode matchups for Week 5 in kickoff order (Oct 6-7, 2025)
+        // Hardcode matchups for Week 5 in kickoff order (Sept 28-29, 2025)
         const matchups = [
             "Minnesota Vikings @ Cleveland Browns",
             "Dallas Cowboys @ New York Jets",
@@ -151,7 +151,7 @@
             "Jacksonville Jaguars @ Kansas City Chiefs"
         ];
 
-        // Static odds based on the provided table (approximate for Week 5, 2025)
+        // Static odds based on web search (approximate for Week 4, 2025)
         const staticOdds = {
             "Minnesota Vikings @ Cleveland Browns": { moneyline: "MIN -195", spread: "MIN -3.5", overUnder: 37.5 },
             "Dallas Cowboys @ New York Jets": { moneyline: "DAL -120", spread: "DAL -1.5", overUnder: 47.5 },
@@ -168,6 +168,40 @@
             "Jacksonville Jaguars @ Kansas City Chiefs": { moneyline: "KC -185", spread: "KC -3.5", overUnder: 45.5 }
         };
 
+        // NFL team synonyms to abbreviation mapping (expanded for full team names)
+        const teamAbbr = {
+            "Minnesota Vikings": "MIN", "Vikings": "MIN", "MIN": "MIN",
+            "Pittsburgh Steelers": "PIT", "Steelers": "PIT", "PIT": "PIT",
+            "Washington Commanders": "WAS", "Commanders": "WAS", "WAS": "WAS",
+            "Atlanta Falcons": "ATL", "Falcons": "ATL", "ATL": "ATL",
+            "New Orleans Saints": "NO", "Saints": "NO", "NO": "NO",
+            "Buffalo Bills": "BUF", "Bills": "BUF", "BUF": "BUF",
+            "Cleveland Browns": "CLE", "Browns": "CLE", "CLE": "CLE",
+            "Detroit Lions": "DET", "Lions": "DET", "DET": "DET",
+            "Tennessee Titans": "TEN", "Titans": "TEN", "TEN": "TEN",
+            "Houston Texans": "HOU", "Texans": "HOU", "HOU": "HOU",
+            "Carolina Panthers": "CAR", "Panthers": "CAR", "CAR": "CAR",
+            "New England Patriots": "NE", "Patriots": "NE", "NE": "NE",
+            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC",
+            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG",
+            "Philadelphia Eagles": "PHI", "Eagles": "PHI", "PHI": "PHI",
+            "Tampa Bay Buccaneers": "TB", "Buccaneers": "TB", "TB": "TB",
+            "Indianapolis Colts": "IND", "Colts": "IND", "IND": "IND",
+            "Los Angeles Rams": "LAR", "Rams": "LAR", "LAR": "LAR",
+            "Jacksonville Jaguars": "JAX", "Jaguars": "JAX", "JAX": "JAX",
+            "San Francisco 49ers": "SF", "49ers": "SF", "SF": "SF",
+            "Baltimore Ravens": "BAL", "Ravens": "BAL", "BAL": "BAL",
+            "Kansas City Chiefs": "KC", "Chiefs": "KC", "KC": "KC",
+            "Chicago Bears": "CHI", "Bears": "CHI", "CHI": "CHI",
+            "Las Vegas Raiders": "LV", "Raiders": "LV", "LV": "LV",
+            "Green Bay Packers": "GB", "Packers": "GB", "GB": "GB",
+            "Dallas Cowboys": "DAL", "Cowboys": "DAL", "DAL": "DAL",
+            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ",
+            "Miami Dolphins": "MIA", "Dolphins": "MIA", "MIA": "MIA",
+            "Cincinnati Bengals": "CIN", "Bengals": "CIN", "CIN": "CIN",
+            "Denver Broncos": "DEN", "Broncos": "DEN", "DEN": "DEN"
+        };
+
         // Function to get abbreviation from any synonym
         function getAbbr(input) {
             const normalized = input.trim().toLowerCase();
@@ -182,7 +216,7 @@
 
         // Function to abbreviate a full matchup
         function abbreviateMatchup(m) {
-            const [away, home] = m.split(' vs. ');
+            const [away, home] = m.split(' @ ');
             const awayAbbr = getAbbr(away);
             const homeAbbr = getAbbr(home);
             return `${awayAbbr} @ ${homeAbbr}`;
@@ -195,7 +229,7 @@
 
         // Function to get teams from matchup
         function getTeamsFromMatchup(matchup) {
-            const [away, home] = matchup.split(' vs. ');
+            const [away, home] = matchup.split(' @ ');
             return [away.trim(), home.trim()];
         }
 
@@ -335,7 +369,7 @@
                 const odds = staticOdds[m] || { moneyline: "Open", spread: "Open", overUnder: "Open" };
                 const mlTd = document.createElement('td');
                 mlTd.className = pickedFantasyTeamMoneyline ? 'red' : 'green';
-                // Extract abbreviated team name from moneyline string (e.g., "MIN -195" -> "MIN")
+                // Extract abbreviated team name from moneyline string (e.g., "BUF -1800" -> "BUF")
                 const moneylineAbbr = odds.moneyline.split(' ')[0];
                 mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : odds.moneyline;
                 moneylineRow.appendChild(mlTd);
