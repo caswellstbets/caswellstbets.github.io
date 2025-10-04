@@ -134,7 +134,7 @@
             picksRef = db.ref('picks/week5'); // Separate entry for Week 5
         }
 
-        // Hardcode matchups for Week 5 in kickoff order (Oct 5-6, 2025)
+        // Hardcode matchups for Week 5 in kickoff order (Oct 6-7, 2025)
         const matchups = [
             "Minnesota Vikings @ Cleveland Browns",
             "Dallas Cowboys @ New York Jets",
@@ -166,36 +166,6 @@
             "Washington Commanders @ Los Angeles Chargers": { moneyline: "LAC -180", spread: "LAC -3.5", overUnder: 47.0 },
             "New England Patriots @ Buffalo Bills": { moneyline: "BUF -460", spread: "BUF -9.5", overUnder: 42.0 },
             "Jacksonville Jaguars @ Kansas City Chiefs": { moneyline: "KC -185", spread: "KC -3.5", overUnder: 45.5 }
-        };
-
-        // NFL team synonyms to abbreviation mapping (expanded for full team names)
-        const teamAbbr = {
-            "Minnesota Vikings": "MIN", "Vikings": "MIN", "MIN": "MIN",
-            "Cleveland Browns": "CLE", "Browns": "CLE", "CLE": "CLE",
-            "Dallas Cowboys": "DAL", "Cowboys": "DAL", "DAL": "DAL",
-            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ",
-            "Las Vegas Raiders": "LV", "Raiders": "LV", "LV": "LV",
-            "Indianapolis Colts": "IND", "Colts": "IND", "IND": "IND",
-            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG",
-            "New Orleans Saints": "NO", "Saints": "NO", "NO": "NO",
-            "Miami Dolphins": "MIA", "Dolphins": "MIA", "MIA": "MIA",
-            "Carolina Panthers": "CAR", "Panthers": "CAR", "CAR": "CAR",
-            "Denver Broncos": "DEN", "Broncos": "DEN", "DEN": "DEN",
-            "Philadelphia Eagles": "PHI", "Eagles": "PHI", "PHI": "PHI",
-            "Houston Texans": "HOU", "Texans": "HOU", "HOU": "HOU",
-            "Baltimore Ravens": "BAL", "Ravens": "BAL", "BAL": "BAL",
-            "Tennessee Titans": "TEN", "Titans": "TEN", "TEN": "TEN",
-            "Arizona Cardinals": "ARI", "Cardinals": "ARI", "ARI": "ARI",
-            "Tampa Bay Buccaneers": "TB", "Buccaneers": "TB", "TB": "TB",
-            "Seattle Seahawks": "SEA", "Seahawks": "SEA", "SEA": "SEA",
-            "Detroit Lions": "DET", "Lions": "DET", "DET": "DET",
-            "Cincinnati Bengals": "CIN", "Bengals": "CIN", "CIN": "CIN",
-            "Washington Commanders": "WAS", "Commanders": "WAS", "WAS": "WAS",
-            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC",
-            "New England Patriots": "NE", "Patriots": "NE", "NE": "NE",
-            "Buffalo Bills": "BUF", "Bills": "BUF", "BUF": "BUF",
-            "Jacksonville Jaguars": "JAX", "Jaguars": "JAX", "JAX": "JAX",
-            "Kansas City Chiefs": "KC", "Chiefs": "KC", "KC": "KC"
         };
 
         // Function to get abbreviation from any synonym
