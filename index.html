@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Parlay Picks - Week 5</title>
+    <title>Fantasy Parlay Picker - Week 6</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #f2f2f2; }
-        #gridTable td { min-width: 120px; cursor: pointer; }
-        #gridTable td.green { background-color: #90ee90; color: black; } /* Light green */
-        #gridTable td.red { background-color: #ffcccb; color: black; } /* Light red */
-        #gridTable td:hover { opacity: 0.8; }
         #form { max-width: 400px; }
         select, input { width: 100%; margin-bottom: 10px; padding: 5px; box-sizing: border-box; }
         button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
@@ -24,38 +20,21 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy Parlay Picks - Week 5</h2>
-    
-    <h3>Availability Grid (Green = Open Odds, Red = Picked)</h3>
-    <table id="gridTable">
-        <thead>
-            <tr>
-                <th>Type</th>
-                <!-- Matchups will be added as columns here dynamically -->
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="moneylineRow"><td>Moneyline</td></tr>
-            <tr id="spreadRow"><td>Spread</td></tr>
-            <tr id="overUnderRow"><td>Over/Under</td></tr>
-        </tbody>
-    </table>
+    <h2>Fantasy Player Picks - Week 6</h2>
     
     <h3>Current Picks</h3>
     <table id="picksTable">
         <thead>
             <tr>
                 <th>Fantasy Team</th>
-                <th>Matchup</th>
-                <th>Bet Type</th>
-                <th>Details</th>
+                <th>Player Name</th>
                 <th>Timestamp</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
     
-    <h3>Make/Update Your Pick</h3>
+    <h3>Submit Your Pick</h3>
     <div id="form">
         <select id="teamSelect">
             <option value="">Select your fantasy team</option>
@@ -72,37 +51,7 @@
             <option value="Little Lebowski Urban Achievers">Little Lebowski Urban Achievers</option>
             <option value="Joe Horn&apos;s Favorite Son">Joe Horn&apos;s Favorite Son</option>
         </select>
-        <select id="matchupSelect">
-            <option value="">Select matchup</option>
-        </select>
-        <select id="betTypeSelect">
-            <option value="">Select bet type</option>
-            <option value="Moneyline">Moneyline</option>
-            <option value="Spread">Spread</option>
-            <option value="Over/Under">Over/Under</option>
-            <option value="Other">Other</option>
-        </select>
-        <div id="teamPickDiv" class="hidden">
-            <select id="teamPickSelect">
-                <option value="">Select team</option>
-            </select>
-        </div>
-        <div id="spreadDiv" class="hidden">
-            <select id="spreadSelect">
-                <option value="">Select spread</option>
-            </select>
-        </div>
-        <div id="overUnderDiv" class="hidden">
-            <select id="overUnderSelect">
-                <option value="">Select Over/Under</option>
-                <option value="Over">Over</option>
-                <option value="Under">Under</option>
-            </select>
-            <input type="text" id="totalInput" value="Default" placeholder="Total (Default = default)">
-        </div>
-        <div id="otherDiv" class="hidden">
-            <input type="text" id="otherInput" placeholder="Enter custom bet">
-        </div>
+        <input type="text" id="playerInput" placeholder="Enter NFL player name">
         <button onclick="submitPick()">Submit Pick</button>
         <p id="result"></p>
     </div>
@@ -110,116 +59,22 @@
     <script>
         // Replace with your Firebase config
         const firebaseConfig = {
-            apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
-            authDomain: "caswellstbets-c09de.firebaseapp.com",
-            databaseURL: "https://caswellstbets-c09de-default-rtdb.firebaseio.com",
-            projectId: "caswellstbets-c09de",
-            storageBucket: "caswellstbets-c09de.firebasestorage.app",
-            messagingSenderId: "502012052829",
-            appId: "1:502012052829:web:f34f8ce9e0fb475d4f94b4",
-            measurementId: "G-5Y18HXVH23"
+            apiKey: "AIzaSyCdxlTlhAEa2leUCHJl4I9Uq0vmJiv3EfE",
+            authDomain: "csb2-177c1.firebaseapp.com",
+            databaseURL: "https://csb2-177c1-default-rtdb.firebaseio.com",
+            projectId: "csb2-177c1",
+            storageBucket: "csb2-177c1.firebasestorage.app",
+            messagingSenderId: "450797309617",
+            appId: "1:450797309617:web:ce5b50e9995bfa61e55c90"
         };
 
-        let firebaseInitialized = false;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            firebaseInitialized = true;
-        } catch (error) {
-            console.error("Error initializing Firebase: ", error);
-        }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const picksRef = db.ref('week6'); // Separate entry for Week 6
 
-        let db, picksRef;
-        if (firebaseInitialized) {
-            db = firebase.database();
-            picksRef = db.ref('picks/week5'); // Separate entry for Week 4
-        }
-
-        // Hardcode matchups for Week 5 in kickoff order (Sept 28-29, 2025)
-        const matchups = [
-            "Minnesota Vikings @ Cleveland Browns",
-            "Dallas Cowboys @ New York Jets",
-            "Las Vegas Raiders @ Indianapolis Colts",
-            "New York Giants @ New Orleans Saints",
-            "Miami Dolphins @ Carolina Panthers",
-            "Denver Broncos @ Philadelphia Eagles",
-            "Houston Texans @ Baltimore Ravens",
-            "Tennessee Titans @ Arizona Cardinals",
-            "Tampa Bay Buccaneers @ Seattle Seahawks",
-            "Detroit Lions @ Cincinnati Bengals",
-            "Washington Commanders @ Los Angeles Chargers",
-            "New England Patriots @ Buffalo Bills",
-            "Jacksonville Jaguars @ Kansas City Chiefs"
-        ];
-
-        // Static odds based on web search (approximate for Week 4, 2025)
-        const staticOdds = {
-            "Minnesota Vikings @ Cleveland Browns": { moneyline: "MIN -195", spread: "MIN -3.5", overUnder: 37.5 },
-            "Dallas Cowboys @ New York Jets": { moneyline: "DAL -120", spread: "DAL -1.5", overUnder: 47.5 },
-            "Las Vegas Raiders @ Indianapolis Colts": { moneyline: "IND -320", spread: "IND -7.0", overUnder: 47.5 },
-            "New York Giants @ New Orleans Saints": { moneyline: "NO -130", spread: "NO -2.0", overUnder: 42.5 },
-            "Miami Dolphins @ Carolina Panthers": { moneyline: "MIA -120", spread: "MIA -1.5", overUnder: 41.5 },
-            "Denver Broncos @ Philadelphia Eagles": { moneyline: "PHI -225", spread: "PHI -4.5", overUnder: 44.0 },
-            "Houston Texans @ Baltimore Ravens": { moneyline: "HOU -125", spread: "HOU -1.5", overUnder: 40.5 },
-            "Tennessee Titans @ Arizona Cardinals": { moneyline: "ARI -430", spread: "ARI -7.5", overUnder: 43.5 },
-            "Tampa Bay Buccaneers @ Seattle Seahawks": { moneyline: "SEA -190", spread: "SEA -2.0", overUnder: 44.5 },
-            "Detroit Lions @ Cincinnati Bengals": { moneyline: "DET -585", spread: "DET -10", overUnder: 49.5 },
-            "Washington Commanders @ Los Angeles Chargers": { moneyline: "LAC -180", spread: "LAC -3.5", overUnder: 47.0 },
-            "New England Patriots @ Buffalo Bills": { moneyline: "BUF -460", spread: "BUF -9.5", overUnder: 42.0 },
-            "Jacksonville Jaguars @ Kansas City Chiefs": { moneyline: "KC -185", spread: "KC -3.5", overUnder: 45.5 }
-        };
-
-        // NFL team synonyms to abbreviation mapping (expanded for full team names)
-        const teamAbbr = {
-            "Minnesota Vikings": "MIN", "Vikings": "MIN", "MIN": "MIN",
-            "Seattle Seahawks": "SEA", "Seahawks": "SEA", "SEA": "SEA",
-            "Washington Commanders": "WAS", "Commanders": "WAS", "WAS": "WAS",
-            "Atlanta Falcons": "ATL", "Falcons": "ATL", "ATL": "ATL",
-            "New Orleans Saints": "NO", "Saints": "NO", "NO": "NO",
-            "Buffalo Bills": "BUF", "Bills": "BUF", "BUF": "BUF",
-            "Cleveland Browns": "CLE", "Browns": "CLE", "CLE": "CLE",
-            "Detroit Lions": "DET", "Lions": "DET", "DET": "DET",
-            "Tennessee Titans": "TEN", "Titans": "TEN", "TEN": "TEN",
-            "Houston Texans": "HOU", "Texans": "HOU", "HOU": "HOU",
-            "Carolina Panthers": "CAR", "Panthers": "CAR", "CAR": "CAR",
-            "New England Patriots": "NE", "Patriots": "NE", "NE": "NE",
-            "Los Angeles Chargers": "LAC", "Chargers": "LAC", "LAC": "LAC",
-            "New York Giants": "NYG", "Giants": "NYG", "NYG": "NYG",
-            "Philadelphia Eagles": "PHI", "Eagles": "PHI", "PHI": "PHI",
-            "Tampa Bay Buccaneers": "TB", "Buccaneers": "TB", "TB": "TB",
-            "Indianapolis Colts": "IND", "Colts": "IND", "IND": "IND",
-            "Arizona Cardinals": "ARI", "Cardinals": "ARI", "ARI": "ARI",
-            "Jacksonville Jaguars": "JAX", "Jaguars": "JAX", "JAX": "JAX",
-            "San Francisco 49ers": "SF", "49ers": "SF", "SF": "SF",
-            "Baltimore Ravens": "BAL", "Ravens": "BAL", "BAL": "BAL",
-            "Kansas City Chiefs": "KC", "Chiefs": "KC", "KC": "KC",
-            "Chicago Bears": "CHI", "Bears": "CHI", "CHI": "CHI",
-            "Las Vegas Raiders": "LV", "Raiders": "LV", "LV": "LV",
-            "Green Bay Packers": "GB", "Packers": "GB", "GB": "GB",
-            "Dallas Cowboys": "DAL", "Cowboys": "DAL", "DAL": "DAL",
-            "New York Jets": "NYJ", "Jets": "NYJ", "NYJ": "NYJ",
-            "Miami Dolphins": "MIA", "Dolphins": "MIA", "MIA": "MIA",
-            "Cincinnati Bengals": "CIN", "Bengals": "CIN", "CIN": "CIN",
-            "Denver Broncos": "DEN", "Broncos": "DEN", "DEN": "DEN"
-        };
-
-        // Function to get abbreviation from any synonym
-        function getAbbr(input) {
-            const normalized = input.trim().toLowerCase();
-            for (let key in teamAbbr) {
-                if (key.toLowerCase() === normalized || (teamAbbr[key].toLowerCase() === normalized)) {
-                    return teamAbbr[key];
-                }
-            }
-            console.error(`No abbreviation found for: ${input}`);
-            return "UNK"; // Unknown if no match
-        }
-
-        // Function to abbreviate a full matchup
-        function abbreviateMatchup(m) {
-            const [away, home] = m.split(' @ ');
-            const awayAbbr = getAbbr(away);
-            const homeAbbr = getAbbr(home);
-            return `${awayAbbr} @ ${homeAbbr}`;
+        // Sanitize key for Firebase (replace invalid chars)
+        function sanitizeKey(key) {
+            return key.replace(/[.#$[\]/]/g, '_');
         }
 
         // Function to get first 5 letters of fantasy team name, ignoring ' and .
@@ -227,164 +82,11 @@
             return teamName.replace(/['.]/g, '').slice(0, 5);
         }
 
-        // Function to get teams from matchup
-        function getTeamsFromMatchup(matchup) {
-            const [away, home] = matchup.split(' @ ');
-            return [away.trim(), home.trim()];
-        }
-
-        // Function to is valid team input
-        function isValidTeam(input) {
-            return getAbbr(input) !== "UNK";
-        }
-
-        // Sanitize key for Firebase (replace invalid chars)
-        function sanitizeKey(key) {
-            return key.replace(/[.#$[\]/]/g, '_');
-        }
-
-        // Populate matchup dropdown with full names
-        const matchupSelect = document.getElementById('matchupSelect');
-        matchups.forEach(m => {
-            const option = document.createElement('option');
-            option.value = m;
-            option.text = m;
-            matchupSelect.appendChild(option);
-        });
-
-        // Add matchup columns to grid header with abbreviations
-        const headerRow = document.getElementById('gridTable').querySelector('thead tr');
-        matchups.forEach(m => {
-            const th = document.createElement('th');
-            th.textContent = abbreviateMatchup(m);
-            headerRow.appendChild(th);
-        });
-
-        // Dynamic form fields
-        const betTypeSelect = document.getElementById('betTypeSelect');
-        const teamPickDiv = document.getElementById('teamPickDiv');
-        const spreadDiv = document.getElementById('spreadDiv');
-        const overUnderDiv = document.getElementById('overUnderDiv');
-        const teamPickSelect = document.getElementById('teamPickSelect');
-        const spreadSelect = document.getElementById('spreadSelect');
-        const overUnderSelect = document.getElementById('overUnderSelect');
-        const totalInput = document.getElementById('totalInput');
-
-        betTypeSelect.addEventListener('change', updateFormFields);
-        matchupSelect.addEventListener('change', updateFormFields);
-
-        function updateFormFields() {
-            teamPickDiv.classList.add('hidden');
-            spreadDiv.classList.add('hidden');
-            overUnderDiv.classList.add('hidden');
-            teamPickSelect.innerHTML = '<option value="">Select team</option>';
-            spreadSelect.innerHTML = '<option value="">Select spread</option>';
-
-            const type = betTypeSelect.value;
-            const matchup = matchupSelect.value;
-
-            if (!type || !matchup) return;
-
-            const teams = getTeamsFromMatchup(matchup);
-            teams.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team;
-                option.text = team;
-                teamPickSelect.appendChild(option);
-            });
-
-            if (type === 'Moneyline' || type === 'Spread') {
-                teamPickDiv.classList.remove('hidden');
-            }
-
-            if (type === 'Spread') {
-                spreadDiv.classList.remove('hidden');
-                for (let i = -14.5; i <= 14.5; i += 0.5) {
-                    const value = i === 0 ? 'Default' : (i > 0 ? '+' + i.toFixed(1) : i.toFixed(1));
-                    const option = document.createElement('option');
-                    option.value = value;
-                    option.text = value;
-                    spreadSelect.appendChild(option);
-                }
-            }
-
-            if (type === 'Over/Under') {
-                overUnderDiv.classList.remove('hidden');
-            }
-        }
-
-        // Listen for data changes and update dropdown
+        // Listen for data changes
         picksRef.on('value', (snapshot) => {
-            try {
-                const data = snapshot.val() || {};
-                updateGrid(data);
-                updatePicksTable(data);
-                updateMatchupDropdown(data);
-            } catch (error) {
-                console.error("Error in Firebase listener: ", error);
-            }
+            const data = snapshot.val() || {};
+            updatePicksTable(data);
         });
-
-        function updateMatchupDropdown(data) {
-            const matchupSelect = document.getElementById('matchupSelect');
-            const currentMatchup = matchupSelect.value;
-            matchupSelect.innerHTML = '<option value="">Select matchup</option>';
-            const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
-            matchups.forEach(m => {
-                if (!takenMatchups.has(m)) {
-                    const option = document.createElement('option');
-                    option.value = m;
-                    option.text = m;
-                    matchupSelect.appendChild(option);
-                }
-            });
-            matchupSelect.value = currentMatchup || ''; // Retain current selection if still available
-            if (!matchupSelect.value) updateFormFields(); // Reset form if matchup is taken
-        }
-
-        function updateGrid(data) {
-            const moneylineRow = document.getElementById('moneylineRow');
-            const spreadRow = document.getElementById('spreadRow');
-            const overUnderRow = document.getElementById('overUnderRow');
-            moneylineRow.innerHTML = '<td>Moneyline</td>';
-            spreadRow.innerHTML = '<td>Spread</td>';
-            overUnderRow.innerHTML = '<td>Over/Under</td>';
-
-            matchups.forEach(m => {
-                let pickedFantasyTeamMoneyline = null, pickedFantasyTeamSpread = null, pickedFantasyTeamOverUnder = null;
-                Object.entries(data).forEach(([sanitizedTeam, p]) => {
-                    if (p && p.matchup === m) {
-                        if (p.type === 'Moneyline' && !pickedFantasyTeamMoneyline) {
-                            pickedFantasyTeamMoneyline = p.originalTeam;
-                        }
-                        if (p.type === 'Spread' && !pickedFantasyTeamSpread) {
-                            pickedFantasyTeamSpread = p.originalTeam;
-                        }
-                        if (p.type === 'Over/Under' && !pickedFantasyTeamOverUnder) {
-                            pickedFantasyTeamOverUnder = p.originalTeam;
-                        }
-                    }
-                });
-
-                const odds = staticOdds[m] || { moneyline: "Open", spread: "Open", overUnder: "Open" };
-                const mlTd = document.createElement('td');
-                mlTd.className = pickedFantasyTeamMoneyline ? 'red' : 'green';
-                // Extract abbreviated team name from moneyline string (e.g., "BUF -1800" -> "BUF")
-                const moneylineAbbr = odds.moneyline.split(' ')[0];
-                mlTd.textContent = pickedFantasyTeamMoneyline ? getFirstFiveLetters(pickedFantasyTeamMoneyline) : odds.moneyline;
-                moneylineRow.appendChild(mlTd);
-
-                const spTd = document.createElement('td');
-                spTd.className = pickedFantasyTeamSpread ? 'red' : 'green';
-                spTd.textContent = pickedFantasyTeamSpread ? getFirstFiveLetters(pickedFantasyTeamSpread) : odds.spread;
-                spreadRow.appendChild(spTd);
-
-                const ouTd = document.createElement('td');
-                ouTd.className = pickedFantasyTeamOverUnder ? 'red' : 'green';
-                ouTd.textContent = pickedFantasyTeamOverUnder ? getFirstFiveLetters(pickedFantasyTeamOverUnder) : odds.overUnder.toString();
-                overUnderRow.appendChild(ouTd);
-            });
-        }
 
         function updatePicksTable(data) {
             const tbody = document.getElementById('picksTable').querySelector('tbody');
@@ -392,16 +94,13 @@
             const teamSelect = document.getElementById('teamSelect');
             const teams = Array.from(teamSelect.options).slice(1).map(option => option.value); // All teams except the empty option
 
-            // Autopopulate with all fantasy teams, N/A if no pick
             teams.forEach(originalTeam => {
                 const sanitizedTeam = sanitizeKey(originalTeam);
-                const pick = data[sanitizedTeam] || { matchup: "N/A", type: "N/A", details: "N/A", timestamp: "N/A" };
+                const pick = data[sanitizedTeam] || { player: "N/A", timestamp: "N/A" };
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${originalTeam}</td>
-                    <td>${pick.matchup}</td>
-                    <td>${pick.type}</td>
-                    <td>${pick.details}</td>
+                    <td>${pick.player}</td>
                     <td>${pick.timestamp}</td>
                 `;
                 tbody.appendChild(row);
@@ -410,123 +109,23 @@
 
         function submitPick() {
             const team = document.getElementById('teamSelect').value;
-            const matchup = document.getElementById('matchupSelect').value;
-            const type = document.getElementById('betTypeSelect').value;
-            let details = '';
+            const player = document.getElementById('playerInput').value.trim();
             const result = document.getElementById('result');
 
-            if (!team || !matchup || !type) {
-                result.textContent = 'Please fill the first three fields.';
+            if (!team || !player) {
+                result.textContent = 'Please select team and enter player name.';
                 return;
             }
 
             const sanitizedTeam = sanitizeKey(team);
             const originalTeam = team;
-            const teams = getTeamsFromMatchup(matchup);
-
-            // Check if matchup is already taken
-            picksRef.once('value', (snapshot) => {
-                try {
-                    const data = snapshot.val() || {};
-                    const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
-                    if (takenMatchups.has(matchup)) {
-                        result.textContent = 'This matchup is already taken.';
-                        return;
-                    }
-
-                    if (type === 'Moneyline') {
-                        const pickedTeam = document.getElementById('teamPickSelect').value;
-                        if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam)) {
-                            result.textContent = 'Invalid team for Moneyline.';
-                            return;
-                        }
-                        details = getAbbr(pickedTeam);
-                    } else if (type === 'Spread') {
-                        const pickedTeam = document.getElementById('teamPickSelect').value;
-                        const spread = document.getElementById('spreadSelect').value;
-                        if (!pickedTeam || !teams.includes(pickedTeam) || !isValidTeam(pickedTeam) || !spread) {
-                            result.textContent = 'Invalid team or spread for Spread.';
-                            return;
-                        }
-                        const spreadDisplay = spread === 'Default' ? 'Default' : spread;
-                        details = getAbbr(pickedTeam) + ' ' + spreadDisplay;
-                    } else if (type === 'Over/Under') {
-                        const ou = document.getElementById('overUnderSelect').value;
-                        let total = document.getElementById('totalInput').value.trim();
-                        if (!ou) {
-                            result.textContent = 'Please select Over or Under.';
-                            return;
-                        }
-                        if (['X', 'x', 'default', 'Default'].includes(total.toLowerCase())) {
-                            total = 'Default';
-                        } else {
-                            const numTotal = parseFloat(total);
-                            if (isNaN(numTotal) || numTotal <= 0) {
-                                result.textContent = 'Total must be a positive number or "Default".';
-                                return;
-                            }
-                            total = numTotal.toFixed(1);
-                        }
-                        details = ou + ' ' + total;
-                    } else if (type === 'Other') {
-                        const custom = document.getElementById('otherInput').value.trim();
-                        if (!custom) {
-                            result.textContent = 'Please enter custom bet.';
-                            return;
-                        }
-                        details = custom;
-                    }
-
-                    const timestamp = new Date().toLocaleString();
-                    picksRef.child(sanitizedTeam).set({ originalTeam, matchup, type, details, timestamp })
-                        .then(() => { result.textContent = 'Pick submitted!'; })
-                        .catch((error) => { 
-                            result.textContent = 'Error submitting pick: ' + error.message; 
-                            console.error('Firebase error:', error);
-                        });
-                } catch (error) {
-                    console.error("Error in submitPick: ", error);
-                }
-            });
-        }
-
-        // Add listener for "Other" bet type
-        betTypeSelect.addEventListener('change', () => {
-            const type = betTypeSelect.value;
-            const otherDiv = document.getElementById('otherDiv');
-            if (type === 'Other') {
-                otherDiv.classList.remove('hidden');
-            } else {
-                otherDiv.classList.add('hidden');
-            }
-            updateFormFields();
-        });
-
-        // Add sort dropdown for picks table
-        const picksTableHeader = document.getElementById('picksTable').querySelector('thead');
-        const sortRow = document.createElement('tr');
-        const sortTh = document.createElement('th');
-        sortTh.colSpan = 5;
-        const sortSelect = document.createElement('select');
-        sortSelect.innerHTML = `
-            <option value="">Sort by</option>
-            <option value="kickoff">Kickoff Date/Time</option>
-            <option value="alphabetical">Matchup Alphabetically</option>
-        `;
-        sortSelect.addEventListener('change', () => sortPicksTable(sortSelect.value));
-        sortTh.appendChild(sortSelect);
-        sortRow.appendChild(sortTh);
-        picksTableHeader.appendChild(sortRow);
-
-        function sortPicksTable(mode) {
-            const tbody = document.getElementById('picksTable').querySelector('tbody');
-            const rows = Array.from(tbody.rows);
-            if (mode === 'kickoff') {
-                rows.sort((a, b) => matchups.indexOf(a.cells[1].textContent) - matchups.indexOf(b.cells[1].textContent));
-            } else if (mode === 'alphabetical') {
-                rows.sort((a, b) => a.cells[1].textContent.localeCompare(b.cells[1].textContent));
-            }
-            rows.forEach(row => tbody.appendChild(row));
+            const timestamp = new Date().toLocaleString();
+            picksRef.child(sanitizedTeam).set({ originalTeam, player, timestamp })
+                .then(() => { result.textContent = 'Pick submitted!'; })
+                .catch((error) => { 
+                    result.textContent = 'Error submitting pick: ' + error.message; 
+                    console.error('Firebase error:', error);
+                });
         }
     </script>
 </body>
