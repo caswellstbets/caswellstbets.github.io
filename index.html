@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Parlay Picker - Week 6</title>
+    <title>Fantasy Parlay Picker - Week 7</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -20,12 +20,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy Player Picks - Week 6</h2>
+    <h2>Fantasy TD Scorer Picks - Week 7</h2>
     
     <h3>Current Picks</h3>
     <table id="picksTable">
         <thead>
             <tr>
+                <th>Matchup</th>
                 <th>Fantasy Team</th>
                 <th>Player Name</th>
                 <th>Timestamp</th>
@@ -36,6 +37,9 @@
     
     <h3>Submit Your Pick</h3>
     <div id="form">
+        <select id="matchupSelect">
+            <option value="">Select NFL matchup</option>
+        </select>
         <select id="teamSelect">
             <option value="">Select your fantasy team</option>
             <option value="We Be Chubbin&apos;">We Be Chubbin&apos;</option>
@@ -59,7 +63,7 @@
     <script>
         // Replace with your Firebase config
         const firebaseConfig = {
-            apiKey: "AIzaSyCdxlTlhAEa2leUCHJl4I9Uq0vmJiv3EfE",
+            apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
             authDomain: "csb2-177c1.firebaseapp.com",
             databaseURL: "https://csb2-177c1-default-rtdb.firebaseio.com",
             projectId: "csb2-177c1",
@@ -70,19 +74,40 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const picksRef = db.ref('week6'); // Separate entry for Week 6
+        const picksRef = db.ref('picks/week7'); // Separate entry for Week 7
 
         // Sanitize key for Firebase (replace invalid chars)
         function sanitizeKey(key) {
             return key.replace(/[.#$[\]/]/g, '_');
         }
 
-        // Function to get first 5 letters of fantasy team name, ignoring ' and .
-        function getFirstFiveLetters(teamName) {
-            return teamName.replace(/['.]/g, '').slice(0, 5);
-        }
+        // Hardcode NFL matchups for Week 7
+        const matchups = [
+            "Los Angeles @ Jacksonville",
+            "New Orleans @ Chicago",
+            "Miami @ Cleveland",
+            "New England @ Tennessee",
+            "Las Vegas @ Kansas City",
+            "Philadelphia @ Minnesota",
+            "Carolina @ New York",
+            "New York @ Denver",
+            "Indianapolis @ Los Angeles",
+            "Washington @ Dallas",
+            "Green Bay @ Arizona",
+            "Atlanta @ San Francisco",
+            "Tampa Bay @ Detroit"
+        ];
 
-        // Listen for data changes
+        // Populate matchup dropdown with full names
+        const matchupSelect = document.getElementById('matchupSelect');
+        matchups.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m;
+            option.text = m;
+            matchupSelect.appendChild(option);
+        });
+
+        // Listen for data changes and update table
         picksRef.on('value', (snapshot) => {
             const data = snapshot.val() || {};
             updatePicksTable(data);
@@ -91,15 +116,12 @@
         function updatePicksTable(data) {
             const tbody = document.getElementById('picksTable').querySelector('tbody');
             tbody.innerHTML = '';
-            const teamSelect = document.getElementById('teamSelect');
-            const teams = Array.from(teamSelect.options).slice(1).map(option => option.value); // All teams except the empty option
-
-            teams.forEach(originalTeam => {
-                const sanitizedTeam = sanitizeKey(originalTeam);
-                const pick = data[sanitizedTeam] || { player: "N/A", timestamp: "N/A" };
+            matchups.forEach(matchup => {
+                const pick = data[sanitizeKey(matchup)] || { fantasyTeam: "N/A", player: "N/A", timestamp: "N/A" };
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${originalTeam}</td>
+                    <td>${matchup}</td>
+                    <td>${pick.fantasyTeam}</td>
                     <td>${pick.player}</td>
                     <td>${pick.timestamp}</td>
                 `;
@@ -108,19 +130,19 @@
         }
 
         function submitPick() {
-            const team = document.getElementById('teamSelect').value;
+            const matchup = document.getElementById('matchupSelect').value;
+            const fantasyTeam = document.getElementById('teamSelect').value;
             const player = document.getElementById('playerInput').value.trim();
             const result = document.getElementById('result');
 
-            if (!team || !player) {
-                result.textContent = 'Please select team and enter player name.';
+            if (!matchup || !fantasyTeam || !player) {
+                result.textContent = 'Please select matchup, fantasy team, and enter player name.';
                 return;
             }
 
-            const sanitizedTeam = sanitizeKey(team);
-            const originalTeam = team;
+            const sanitizedMatchup = sanitizeKey(matchup);
             const timestamp = new Date().toLocaleString();
-            picksRef.child(sanitizedTeam).set({ originalTeam, player, timestamp })
+            picksRef.child(sanitizedMatchup).set({ fantasyTeam, player, timestamp })
                 .then(() => { result.textContent = 'Pick submitted!'; })
                 .catch((error) => { 
                     result.textContent = 'Error submitting pick: ' + error.message; 
