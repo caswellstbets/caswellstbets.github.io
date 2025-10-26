@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Parlay Picker - Week 7</title>
+    <title>Fantasy TD Scorer Picks - Week 8</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -13,14 +13,13 @@
         select, input { width: 100%; margin-bottom: 10px; padding: 5px; box-sizing: border-box; }
         button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
         #result { color: red; }
-        .hidden { display: none; }
         @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy TD Scorer Picks - Week 7</h2>
+    <h2>Fantasy TD Scorer Picks - Week 8</h2>
     
     <h3>Current Picks</h3>
     <table id="picksTable">
@@ -74,28 +73,27 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const picksRef = db.ref('picks/week7'); // Separate entry for Week 7
+        const picksRef = db.ref('picks/week8'); // Separate entry for Week 8
 
         // Sanitize key for Firebase (replace invalid chars)
         function sanitizeKey(key) {
             return key.replace(/[.#$[\]/]/g, '_');
         }
 
-        // Hardcode NFL matchups for Week 7
+        // Hardcode NFL matchups for Week 8
         const matchups = [
-            "Los Angeles @ Jacksonville",
-            "New Orleans @ Chicago",
-            "Miami @ Cleveland",
-            "New England @ Tennessee",
-            "Las Vegas @ Kansas City",
-            "Philadelphia @ Minnesota",
-            "Carolina @ New York",
-            "New York @ Denver",
-            "Indianapolis @ Los Angeles",
-            "Washington @ Dallas",
-            "Green Bay @ Arizona",
-            "Atlanta @ San Francisco",
-            "Tampa Bay @ Detroit"
+            "Dolphins @ Falcons",
+            "Bears @ Ravens",
+            "Bills @ Panthers",
+            "Jets @ Bengals",
+            "49ers @ Texans",
+            "Browns @ Patriots",
+            "Giants @ Eagles",
+            "Buccaneers @ Saints",
+            "Cowboys @ Broncos",
+            "Titans @ Colts",
+            "Packers @ Steelers",
+            "Commanders @ Chiefs"
         ];
 
         // Populate matchup dropdown with full names
@@ -117,15 +115,34 @@
             const tbody = document.getElementById('picksTable').querySelector('tbody');
             tbody.innerHTML = '';
             matchups.forEach(matchup => {
-                const pick = data[sanitizeKey(matchup)] || { fantasyTeam: "N/A", player: "N/A", timestamp: "N/A" };
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${matchup}</td>
-                    <td>${pick.fantasyTeam}</td>
-                    <td>${pick.player}</td>
-                    <td>${pick.timestamp}</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
                 `;
                 tbody.appendChild(row);
+            });
+            // Populate with existing picks
+            Object.entries(data).forEach(([id, p]) => {
+                const rows = Array.from(tbody.rows);
+                const rowIndex = rows.findIndex(row => row.cells[0].textContent === p.matchup);
+                if (rowIndex !== -1) {
+                    rows[rowIndex].cells[1].textContent = p.fantasyTeam;
+                    rows[rowIndex].cells[2].textContent = p.player;
+                    rows[rowIndex].cells[3].textContent = p.timestamp;
+                } else {
+                    // Append new row if multiple picks for the same matchup
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${p.matchup}</td>
+                        <td>${p.fantasyTeam}</td>
+                        <td>${p.player}</td>
+                        <td>${p.timestamp}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
             });
         }
 
@@ -140,9 +157,8 @@
                 return;
             }
 
-            const sanitizedMatchup = sanitizeKey(matchup);
             const timestamp = new Date().toLocaleString();
-            picksRef.child(sanitizedMatchup).set({ fantasyTeam, player, timestamp })
+            picksRef.push({ matchup, fantasyTeam, player, timestamp })
                 .then(() => { result.textContent = 'Pick submitted!'; })
                 .catch((error) => { 
                     result.textContent = 'Error submitting pick: ' + error.message; 
