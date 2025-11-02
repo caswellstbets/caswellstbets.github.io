@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy TD Scorer Picks - Week 8</title>
+    <title>Fantasy TD Scorer Picks - Week 9</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -19,7 +19,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy TD Scorer Picks - Week 8</h2>
+    <h2>Fantasy TD Scorer Picks - Week 9</h2>
     
     <h3>Current Picks</h3>
     <table id="picksTable">
@@ -73,27 +73,28 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const picksRef = db.ref('picks/week8'); // Separate entry for Week 8
+        const picksRef = db.ref('picks/week9'); // Separate entry for Week 9
 
         // Sanitize key for Firebase (replace invalid chars)
         function sanitizeKey(key) {
             return key.replace(/[.#$[\]/]/g, '_');
         }
 
-        // Hardcode NFL matchups for Week 8
+        // Hardcode NFL matchups for Week 9
         const matchups = [
-            "Dolphins @ Falcons",
-            "Bears @ Ravens",
-            "Bills @ Panthers",
-            "Jets @ Bengals",
-            "49ers @ Texans",
-            "Browns @ Patriots",
-            "Giants @ Eagles",
-            "Buccaneers @ Saints",
-            "Cowboys @ Broncos",
-            "Titans @ Colts",
-            "Packers @ Steelers",
-            "Commanders @ Chiefs"
+            "49ers @ Giants",
+            "Chargers @ Titans",
+            "Vikings @ Lions",
+            "Falcons @ Patriots",
+            "Colts @ Steelers",
+            "Broncos @ Texans",
+            "Bears @ Bengals",
+            "Panthers @ Packers",
+            "Saints @ Rams",
+            "Jaguars @ Raiders",
+            "Chiefs @ Bills",
+            "Seahawks @ Commanders",
+            "Cardinals @ Cowboys"
         ];
 
         // Populate matchup dropdown with full names
