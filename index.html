@@ -20,12 +20,76 @@
         }
         .radio-circle.selected { background: #4CAF50; border-color: #4CAF50; }
         .radio-circle.taken { background: #dc3545; border-color: #dc3545; cursor: not-allowed; }
+        .extra-row { background-color: #fff8e1; font-style: italic; }
+        .extra-row .radio-circle { border-color: #ffb300; }
+        .extra-row .radio-circle.selected { background: #ffb300; border-color: #ffb300; }
+        .extra-row .radio-circle.taken { background: #e91e63; border-color: #e91e63; }
         @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
+
+        /* Crypto Section */
+        .crypto-container {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .crypto-title { font-size: 1.5em; margin-bottom: 15px; color: #333; }
+        .holding { font-size: 1.25em; margin: 10px 0; font-weight: bold; line-height: 1.5; }
+        .price { font-weight: normal; color: #555; font-size: 0.95em; }
+        .total { font-size: 1.8em; margin-top: 15px; color: #2c3e50; border-top: 2px solid #ddd; padding-top: 10px; }
+        .change { font-size: 1.4em; margin-top: 10px; }
+        .change.positive { color: #27ae60; }
+        .change.negative { color: #e74c3c; }
+        .loading { color: #999; font-style: italic; }
+        .error { color: #e74c3c; }
+        .chart-container {
+            margin-top: 20px;
+            height: 300px;
+            position: relative;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .chart-loading, .chart-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1em;
+            color: #777;
+        }
     </style>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+    <!-- Crypto Holdings -->
+    <div class="crypto-container">
+        <div class="crypto-title">My Crypto Holdings</div>
+        <div id="btc-holding" class="holding loading">BTC: Loading...</div>
+        <div id="eth-holding" class="holding loading">ETH: Loading...</div>
+        <div id="total-value" class="total loading">Total: Loading...</div>
+        <div>Original Cost: $2,880</div>
+        <div id="change-value" class="change loading">Change: Loading...</div>
+        <div class="chart-container">
+            <div id="chart-status" class="chart-loading">Loading chart...</div>
+            <canvas id="portfolioChart"></canvas>
+        </div>
+        <p style="font-size:0.9em; color:#777; margin-top:10px;">
+            Updated on page load • Source: CoinGecko
+        </p>
+    </div>
+
+    <!-- Fantasy Picks -->
     <h2>Fantasy TD Scorer Picks - Week 10</h2>
     
     <h3>Current Picks</h3>
@@ -65,7 +129,115 @@
     </div>
 
     <script>
-        // Updated Firebase config (no measurementId)
+        // === CRYPTO HOLDINGS ===
+        const btcHolding = 0.0112;
+        const ethHolding = 0.362;
+        const originalCost = 2880;
+        let chart = null;
+
+        async function updateCryptoHoldings() {
+            const btcEl = document.getElementById('btc-holding');
+            const ethEl = document.getElementById('eth-holding');
+            const totalEl = document.getElementById('total-value');
+            const changeEl = document.getElementById('change-value');
+            const chartStatus = document.getElementById('chart-status');
+
+            try {
+                const currentRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
+                const currentData = await currentRes.json();
+
+                const btcPrice = currentData.bitcoin.usd;
+                const ethPrice = currentData.ethereum.usd;
+
+                const btcValue = btcHolding * btcPrice;
+                const ethValue = ethHolding * ethPrice;
+                const totalValue = btcValue + ethValue;
+
+                const changeAmount = totalValue - originalCost;
+                const changePercent = ((changeAmount / originalCost) * 100).toFixed(2);
+                const changeSign = changeAmount >= 0 ? '+' : '';
+                const changeClass = changeAmount >= 0 ? 'positive' : 'negative';
+
+                btcEl.innerHTML = `BTC (0.0112 @ <span class="price">$${btcPrice.toLocaleString()}</span>): <strong>$${btcValue.toFixed(2)}</strong>`;
+                ethEl.innerHTML = `ETH (0.362 @ <span class="price">$${ethPrice.toLocaleString()}</span>): <strong>$${ethValue.toFixed(2)}</strong>`;
+                totalEl.textContent = `Total: $${totalValue.toFixed(2)}`;
+                changeEl.innerHTML = `Change: ${changeSign}$${Math.abs(changeAmount).toFixed(2)} (${changeSign}${changePercent}%)`;
+                changeEl.className = `change ${changeClass}`;
+
+                [btcEl, ethEl, totalEl, changeEl].forEach(el => el.classList.remove('loading'));
+
+                await updateChart(chartStatus);
+            } catch (err) {
+                console.error("Crypto load error:", err);
+                btcEl.textContent = 'BTC: Error'; ethEl.textContent = 'ETH: Error';
+                totalEl.textContent = 'Total: Error'; changeEl.textContent = 'Change: Error';
+                [btcEl, ethEl, totalEl, changeEl].forEach(el => el.classList.add('error'));
+                chartStatus.textContent = 'Chart: Failed to load';
+                chartStatus.className = 'chart-error';
+            }
+        }
+
+        async function updateChart(statusEl) {
+            try {
+                const from = Math.floor(new Date('2025-09-06').getTime() / 1000);
+                const to = Math.floor(Date.now() / 1000);
+
+                const btcUrl = `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=${from}&to=${to}&precision=2`;
+                const ethUrl = `https://api.coingecko.com/api/v3/coins/ethereum/market_chart/range?vs_currency=usd&from=${from}&to=${to}&precision=2`;
+
+                const [btcRes, ethRes] = await Promise.all([fetch(btcUrl), fetch(ethUrl)]);
+                const btcData = await btcRes.json();
+                const ethData = await ethRes.json();
+
+                if (!btcData.prices?.length || !ethData.prices?.length) {
+                    throw new Error("No price data");
+                }
+
+                const labels = btcData.prices.map(p => {
+                    const date = new Date(p[0]);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+
+                const btcValues = btcData.prices.map(p => (btcHolding * p[1]).toFixed(2));
+                const ethValues = ethData.prices.map(p => (ethHolding * p[1]).toFixed(2));
+                const totalValues = btcData.prices.map((_, i) => 
+                    (btcHolding * btcData.prices[i][1] + ethHolding * ethData.prices[i][1]).toFixed(2)
+                );
+
+                const ctx = document.getElementById('portfolioChart').getContext('2d');
+                if (chart) chart.destroy();
+
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'BTC Value', data: btcValues, borderColor: '#f7931a', backgroundColor: 'rgba(247,147,26,0.1)', fill: true, tension: 0.3, pointRadius: 0 },
+                            { label: 'ETH Value', data: ethValues, borderColor: '#627eea', backgroundColor: 'rgba(98,126,234,0.1)', fill: true, tension: 0.3, pointRadius: 0 },
+                            { label: 'Total', data: totalValues, borderColor: '#2ecc71', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top' }, tooltip: { enabled: false } },
+                        interaction: { mode: null },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 10 }, grid: { display: false } },
+                            y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' } }
+                        }
+                    }
+                });
+
+                statusEl.remove();
+            } catch (err) {
+                console.error("Chart error:", err);
+                statusEl.textContent = 'Chart: No data available';
+                statusEl.className = 'chart-error';
+            }
+        }
+
+        // === FANTASY PICKS ===
         const firebaseConfig = {
             apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
             authDomain: "csb2-177c1.firebaseapp.com",
@@ -76,11 +248,6 @@
             appId: "1:450797309617:web:ce5b50e9995bfa61e55c90"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const picksRef = db.ref('picks/week10'); // Separate entry for Week 10
-
-        // Hardcode NFL matchups for Week 10
         const matchups = [
             "New England Patriots @ Tampa Bay Buccaneers",
             "New York Giants @ Chicago Bears",
@@ -96,24 +263,26 @@
             "Philadelphia Eagles @ Green Bay Packers"
         ];
 
+        const EXTRA_MATCHUP_KEY = "extra-entry-fuckup";
         let selectedMatchup = null;
-
-        // Initialize table on load
-        window.onload = function() {
-            updatePicksTable({}); // Build empty table immediately
-            // Listen for data changes
-            picksRef.on('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                updatePicksTable(data);
-            });
-        };
+        let picksRef = null;
 
         function updatePicksTable(data) {
             const tbody = document.getElementById('picksTable').querySelector('tbody');
             tbody.innerHTML = '';
-            const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
+            const takenMatchups = new Set();
+            const extraPicks = [];
 
-            matchups.forEach((matchup, index) => {
+            Object.values(data).forEach(p => {
+                if (p.matchup === EXTRA_MATCHUP_KEY) {
+                    extraPicks.push(p);
+                } else {
+                    takenMatchups.add(p.matchup);
+                }
+            });
+
+            // Regular matchups
+            matchups.forEach((matchup) => {
                 const isTaken = takenMatchups.has(matchup);
                 const pick = Object.values(data).find(p => p.matchup === matchup) || { fantasyTeam: "N/A", player: "N/A", timestamp: "N/A" };
                 const row = document.createElement('tr');
@@ -127,46 +296,93 @@
                 `;
                 tbody.appendChild(row);
             });
+
+            // Extra entry rows
+            extraPicks.forEach((pick, index) => {
+                const isLast = index === extraPicks.length - 1;
+                const key = `${EXTRA_MATCHUP_KEY}-${index}`;
+                const row = document.createElement('tr');
+                row.className = 'extra-row';
+                row.innerHTML = `
+                    <td><div class="radio-circle ${selectedMatchup === key ? 'selected' : ''} ${!isLast ? 'taken' : ''}" 
+                         onclick="${!isLast ? '' : `selectMatchup('${key}', this)`}"></div></td>
+                    <td>Extra entry if you fucked up</td>
+                    <td>${pick.fantasyTeam}</td>
+                    <td>${pick.player}</td>
+                    <td>${pick.timestamp}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Always show one empty extra row
+            const emptyKey = `${EXTRA_MATCHUP_KEY}-${extraPicks.length}`;
+            const emptyRow = document.createElement('tr');
+            emptyRow.className = 'extra-row';
+            emptyRow.innerHTML = `
+                <td><div class="radio-circle ${selectedMatchup === emptyKey ? 'selected' : ''}" 
+                     onclick="selectMatchup('${emptyKey}', this)"></div></td>
+                <td>Extra entry if you fucked up</td>
+                <td>N/A</td>
+                <td>N/A</td>
+                <td>N/A</td>
+            `;
+            tbody.appendChild(emptyRow);
         }
 
-        function selectMatchup(matchup, element) {
-            // Deselect previous
-            const previous = document.querySelector('.radio-circle.selected');
-            if (previous) previous.classList.remove('selected');
-            // Select new
-            element.classList.add('selected');
+        function selectMatchup(matchup, el) {
+            document.querySelectorAll('.radio-circle.selected').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
             selectedMatchup = matchup;
         }
 
         function submitPick() {
-            const fantasyTeam = document.getElementById('teamSelect').value;
+            const team = document.getElementById('teamSelect').value;
             const player = document.getElementById('playerInput').value.trim();
             const result = document.getElementById('result');
-            const submitBtn = document.getElementById('submitBtn');
+            const btn = document.getElementById('submitBtn');
 
-            if (!selectedMatchup || !fantasyTeam || !player) {
-                result.textContent = 'Please select a matchup, your team, and enter a player name.';
+            if (!selectedMatchup || !team || !player) {
+                result.textContent = 'Select matchup, team, and player.';
                 return;
             }
 
+            const isExtra = selectedMatchup.startsWith(EXTRA_MATCHUP_KEY);
+            const matchupToSave = isExtra ? EXTRA_MATCHUP_KEY : selectedMatchup;
+
             const timestamp = new Date().toLocaleString();
-            picksRef.push({ matchup: selectedMatchup, fantasyTeam, player, timestamp })
-                .then(() => { 
-                    result.textContent = 'Pick submitted!'; 
-                    submitBtn.classList.add('submitted');
-                    setTimeout(() => submitBtn.classList.remove('submitted'), 2000);
+            picksRef.push({ matchup: matchupToSave, fantasyTeam: team, player, timestamp })
+                .then(() => {
+                    result.textContent = 'Pick submitted!';
+                    btn.classList.add('submitted');
+                    setTimeout(() => btn.classList.remove('submitted'), 2000);
                     selectedMatchup = null;
                     document.getElementById('playerInput').value = '';
-                    // Clear selected circle
-                    const selectedCircle = document.querySelector('.radio-circle.selected');
-                    if (selectedCircle) selectedCircle.classList.remove('selected');
+                    document.querySelector('.radio-circle.selected')?.classList.remove('selected');
                 })
-                .catch((error) => { 
-                    result.textContent = 'Error submitting pick: ' + error.message; 
-                    console.error('Firebase error:', error);
+                .catch(err => {
+                    result.textContent = 'Error: ' + err.message;
                 });
         }
+
+        // === ON LOAD ===
+        window.onload = function() {
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            picksRef = db.ref('picks/week10');
+
+            // Load initial table (empty DB = all matchups shown)
+            updatePicksTable({});
+
+            // Listen for real-time updates
+            picksRef.on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                updatePicksTable(data);
+            });
+
+            // Load crypto data
+            updateCryptoHoldings();
+        };
     </script>
 </body>
 </html>
-
