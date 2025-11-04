@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy TD Scorer Picks - Week 9</title>
+    <title>Fantasy TD Scorer Picks - Week 10</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -11,20 +11,28 @@
         th { background-color: #f2f2f2; }
         #form { max-width: 400px; }
         select, input { width: 100%; margin-bottom: 10px; padding: 5px; box-sizing: border-box; }
-        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
+        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; transition: background 0.3s; }
+        button.submitted { background: #7d2e78; }
         #result { color: red; }
+        .radio-circle {
+            width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 50%; display: inline-block; cursor: pointer;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .radio-circle.selected { background: #4CAF50; border-color: #4CAF50; }
+        .radio-circle.taken { background: #dc3545; border-color: #dc3545; cursor: not-allowed; }
         @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h2>Fantasy TD Scorer Picks - Week 9</h2>
+    <h2>Fantasy TD Scorer Picks - Week 10</h2>
     
     <h3>Current Picks</h3>
     <table id="picksTable">
         <thead>
             <tr>
+                <th></th>
                 <th>Matchup</th>
                 <th>Fantasy Team</th>
                 <th>Player Name</th>
@@ -36,31 +44,28 @@
     
     <h3>Submit Your Pick</h3>
     <div id="form">
-        <select id="matchupSelect">
-            <option value="">Select NFL matchup</option>
-        </select>
         <select id="teamSelect">
             <option value="">Select your fantasy team</option>
-            <option value="We Be Chubbin&apos;">We Be Chubbin&apos;</option>
+            <option value="We Be Chubbin&apos;">We Be Chubbin'</option>
             <option value="Big Digg Energy">Big Digg Energy</option>
             <option value="Blacked Out Bill">Blacked Out Bill</option>
             <option value="Dr. Bozorgh">Dr. Bozorgh</option>
-            <option value="Dr. Gonzo&apos;s Advice">Dr. Gonzo&apos;s Advice</option>
+            <option value="Dr. Gonzo&apos;s Advice">Dr. Gonzo's Advice</option>
             <option value="Westboro Baptist Church">Westboro Baptist Church</option>
             <option value="Glizzy Gobblers">Glizzy Gobblers</option>
             <option value="Elder Statesman">Elder Statesman</option>
-            <option value="Beth&apos;s Divorce Attorney">Beth&apos;s Divorce Attorney</option>
+            <option value="Beth&apos;s Divorce Attorney">Beth's Divorce Attorney</option>
             <option value="Hawk Tua">Hawk Tua</option>
             <option value="Little Lebowski Urban Achievers">Little Lebowski Urban Achievers</option>
-            <option value="Joe Horn&apos;s Favorite Son">Joe Horn&apos;s Favorite Son</option>
+            <option value="Joe Horn&apos;s Favorite Son">Joe Horn's Favorite Son</option>
         </select>
         <input type="text" id="playerInput" placeholder="Enter NFL player name">
-        <button onclick="submitPick()">Submit Pick</button>
+        <button id="submitBtn" onclick="submitPick()">Submit Pick</button>
         <p id="result"></p>
     </div>
 
     <script>
-        // Replace with your Firebase config
+        // Updated Firebase config (no measurementId)
         const firebaseConfig = {
             apiKey: "AIzaSyBR5cMxwyJExTZz6iyyFHCmB_QhfDawen8",
             authDomain: "csb2-177c1.firebaseapp.com",
@@ -73,94 +78,89 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const picksRef = db.ref('picks/week9'); // Separate entry for Week 9
+        const picksRef = db.ref('picks/week10'); // Separate entry for Week 10
 
-        // Sanitize key for Firebase (replace invalid chars)
-        function sanitizeKey(key) {
-            return key.replace(/[.#$[\]/]/g, '_');
-        }
-
-        // Hardcode NFL matchups for Week 9
+        // Hardcode NFL matchups for Week 10
         const matchups = [
-            "49ers @ Giants",
-            "Chargers @ Titans",
-            "Vikings @ Lions",
-            "Falcons @ Patriots",
-            "Colts @ Steelers",
-            "Broncos @ Texans",
-            "Bears @ Bengals",
-            "Panthers @ Packers",
-            "Saints @ Rams",
-            "Jaguars @ Raiders",
-            "Chiefs @ Bills",
-            "Seahawks @ Commanders",
-            "Cardinals @ Cowboys"
+            "New England Patriots @ Tampa Bay Buccaneers",
+            "New York Giants @ Chicago Bears",
+            "New Orleans Saints @ Carolina Panthers",
+            "Jacksonville Jaguars @ Houston Texans",
+            "Buffalo Bills @ Miami Dolphins",
+            "Baltimore Ravens @ Minnesota Vikings",
+            "Cleveland Browns @ New York Jets",
+            "Arizona Cardinals @ Seattle Seahawks",
+            "Los Angeles Rams @ San Francisco 49ers",
+            "Detroit Lions @ Washington Commanders",
+            "Pittsburgh Steelers @ Los Angeles Chargers",
+            "Philadelphia Eagles @ Green Bay Packers"
         ];
 
-        // Populate matchup dropdown with full names
-        const matchupSelect = document.getElementById('matchupSelect');
-        matchups.forEach(m => {
-            const option = document.createElement('option');
-            option.value = m;
-            option.text = m;
-            matchupSelect.appendChild(option);
-        });
+        let selectedMatchup = null;
 
-        // Listen for data changes and update table
-        picksRef.on('value', (snapshot) => {
-            const data = snapshot.val() || {};
-            updatePicksTable(data);
-        });
+        // Initialize table on load
+        window.onload = function() {
+            updatePicksTable({}); // Build empty table immediately
+            // Listen for data changes
+            picksRef.on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                updatePicksTable(data);
+            });
+        };
 
         function updatePicksTable(data) {
             const tbody = document.getElementById('picksTable').querySelector('tbody');
             tbody.innerHTML = '';
-            matchups.forEach(matchup => {
+            const takenMatchups = new Set(Object.values(data).map(p => p.matchup));
+
+            matchups.forEach((matchup, index) => {
+                const isTaken = takenMatchups.has(matchup);
+                const pick = Object.values(data).find(p => p.matchup === matchup) || { fantasyTeam: "N/A", player: "N/A", timestamp: "N/A" };
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td><div class="radio-circle ${selectedMatchup === matchup ? 'selected' : ''} ${isTaken ? 'taken' : ''}" 
+                         onclick="${isTaken ? '' : `selectMatchup('${matchup}', this)`}"></div></td>
                     <td>${matchup}</td>
-                    <td>N/A</td>
-                    <td>N/A</td>
-                    <td>N/A</td>
+                    <td>${pick.fantasyTeam}</td>
+                    <td>${pick.player}</td>
+                    <td>${pick.timestamp}</td>
                 `;
                 tbody.appendChild(row);
             });
-            // Populate with existing picks
-            Object.entries(data).forEach(([id, p]) => {
-                const rows = Array.from(tbody.rows);
-                const rowIndex = rows.findIndex(row => row.cells[0].textContent === p.matchup);
-                if (rowIndex !== -1) {
-                    rows[rowIndex].cells[1].textContent = p.fantasyTeam;
-                    rows[rowIndex].cells[2].textContent = p.player;
-                    rows[rowIndex].cells[3].textContent = p.timestamp;
-                } else {
-                    // Append new row if multiple picks for the same matchup
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${p.matchup}</td>
-                        <td>${p.fantasyTeam}</td>
-                        <td>${p.player}</td>
-                        <td>${p.timestamp}</td>
-                    `;
-                    tbody.appendChild(row);
-                }
-            });
+        }
+
+        function selectMatchup(matchup, element) {
+            // Deselect previous
+            const previous = document.querySelector('.radio-circle.selected');
+            if (previous) previous.classList.remove('selected');
+            // Select new
+            element.classList.add('selected');
+            selectedMatchup = matchup;
         }
 
         function submitPick() {
-            const matchup = document.getElementById('matchupSelect').value;
             const fantasyTeam = document.getElementById('teamSelect').value;
             const player = document.getElementById('playerInput').value.trim();
             const result = document.getElementById('result');
+            const submitBtn = document.getElementById('submitBtn');
 
-            if (!matchup || !fantasyTeam || !player) {
-                result.textContent = 'Please select matchup, fantasy team, and enter player name.';
+            if (!selectedMatchup || !fantasyTeam || !player) {
+                result.textContent = 'Please select a matchup, your team, and enter a player name.';
                 return;
             }
 
             const timestamp = new Date().toLocaleString();
-            picksRef.push({ matchup, fantasyTeam, player, timestamp })
-                .then(() => { result.textContent = 'Pick submitted!'; })
+            picksRef.push({ matchup: selectedMatchup, fantasyTeam, player, timestamp })
+                .then(() => { 
+                    result.textContent = 'Pick submitted!'; 
+                    submitBtn.classList.add('submitted');
+                    setTimeout(() => submitBtn.classList.remove('submitted'), 2000);
+                    selectedMatchup = null;
+                    document.getElementById('playerInput').value = '';
+                    // Clear selected circle
+                    const selectedCircle = document.querySelector('.radio-circle.selected');
+                    if (selectedCircle) selectedCircle.classList.remove('selected');
+                })
                 .catch((error) => { 
                     result.textContent = 'Error submitting pick: ' + error.message; 
                     console.error('Firebase error:', error);
@@ -169,3 +169,4 @@
     </script>
 </body>
 </html>
+
