@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy TD Scorer Picks - Week 11</title>
+    <title>Fantasy TD Scorer Picks - Week 12</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -90,7 +90,7 @@
     </div>
 
     <!-- Fantasy Picks -->
-    <h2>Fantasy TD Scorer Picks - Week 11</h2>
+    <h2>Fantasy TD Scorer Picks - Week 12</h2>
     
     <h3>Current Picks</h3>
     <table id="picksTable">
@@ -249,19 +249,19 @@
         };
 
         const matchups = [
-            "Chicago Bears @ Minnesota Vikings",
-            "Tampa Bay Buccaneers @ Buffalo Bills",
-            "Carolina Panthers @ Atlanta Falcons",
-            "Houston Texans @ Tennessee Titans",
-            "Los Angeles Chargers @ Jacksonville Jaguars",
-            "Green Bay Packers @ New York Giants",
-            "Cincinnati Bengals @ Pittsburgh Steelers",
-            "Seattle Seahawks @ Los Angeles Rams",
-            "San Francisco 49ers @ Arizona Cardinals",
-            "Baltimore Ravens @ Cleveland Browns",
-            "Kansas City Chiefs @ Denver Broncos",
-            "Detroit Lions @ Philadelphia Eagles",
-            "Dallas Cowboys @ Las Vegas Raiders"
+            "Pittsburgh Steelers @ Chicago Bears",
+            "New England Patriots @ Cincinnati Bengals",
+            "New York Giants @ Detroit Lions",
+            "Minnesota Vikings @ Green Bay Packers",
+            "Seattle Seahawks @ Tennessee Titans",
+            "Indianapolis Colts @ Kansas City Chiefs",
+            "New York Jets @ Baltimore Ravens",
+            "Cleveland Browns @ Las Vegas Raiders",
+            "Jacksonville Jaguars @ Arizona Cardinals",
+            "Philadelphia Eagles @ Dallas Cowboys",
+            "Atlanta Falcons @ New Orleans Saints",
+            "Tampa Bay Buccaneers @ Los Angeles Rams",
+            "Carolina Panthers @ San Francisco 49ers"
         ];
 
         const EXTRA_MATCHUP_KEY = "extra-entry-fuckup";
@@ -282,7 +282,6 @@
                 }
             });
 
-            // Regular matchups
             matchups.forEach((matchup) => {
                 const isTaken = takenMatchups.has(matchup);
                 const pick = Object.values(data).find(p => p.matchup === matchup) || { fantasyTeam: "N/A", player: "N/A", timestamp: "N/A" };
@@ -298,7 +297,6 @@
                 tbody.appendChild(row);
             });
 
-            // Extra entry rows
             extraPicks.forEach((pick, index) => {
                 const isLast = index === extraPicks.length - 1;
                 const key = `${EXTRA_MATCHUP_KEY}-${index}`;
@@ -315,7 +313,6 @@
                 tbody.appendChild(row);
             });
 
-            // Always show one empty extra row
             const emptyKey = `${EXTRA_MATCHUP_KEY}-${extraPicks.length}`;
             const emptyRow = document.createElement('tr');
             emptyRow.className = 'extra-row';
@@ -370,7 +367,7 @@
             // Initialize Firebase
             firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
-            picksRef = db.ref('picks/week11');
+            picksRef = db.ref('picks/week12');  // ← Week 12
 
             // Load initial table (empty DB = all matchups shown)
             updatePicksTable({});
