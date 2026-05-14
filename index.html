@@ -1,386 +1,365 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy TD Scorer Picks - Week 12</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; max-width: 100%; overflow-x: auto; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        #form { max-width: 400px; }
-        select, input { width: 100%; margin-bottom: 10px; padding: 5px; box-sizing: border-box; }
-        button { padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; transition: background 0.3s; }
-        button.submitted { background: #7d2e78; }
-        #result { color: red; }
-        .radio-circle {
-            width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 50%; display: inline-block; cursor: pointer;
-            transition: background 0.3s, border-color 0.3s;
-        }
-        .radio-circle.selected { background: #4CAF50; border-color: #4CAF50; }
-        .radio-circle.taken { background: #dc3545; border-color: #dc3545; cursor: not-allowed; }
-        .extra-row { background-color: #fff8e1; font-style: italic; }
-        .extra-row .radio-circle { border-color: #ffb300; }
-        .extra-row .radio-circle.selected { background: #ffb300; border-color: #ffb300; }
-        .extra-row .radio-circle.taken { background: #e91e63; border-color: #e91e63; }
-        @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px; } }
-
-        /* Crypto Section */
-        .crypto-container {
-            background: #f9f9f9;
-            border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .crypto-title { font-size: 1.5em; margin-bottom: 15px; color: #333; }
-        .holding { font-size: 1.25em; margin: 10px 0; font-weight: bold; line-height: 1.5; }
-        .price { font-weight: normal; color: #555; font-size: 0.95em; }
-        .total { font-size: 1.8em; margin-top: 15px; color: #2c3e50; border-top: 2px solid #ddd; padding-top: 10px; }
-        .change { font-size: 1.4em; margin-top: 10px; }
-        .change.positive { color: #27ae60; }
-        .change.negative { color: #e74c3c; }
-        .loading { color: #999; font-style: italic; }
-        .error { color: #e74c3c; }
-        .chart-container {
-            margin-top: 20px;
-            height: 300px;
-            position: relative;
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .chart-loading, .chart-error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.1em;
-            color: #777;
-        }
-    </style>
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGA Championship 2026 Pool • LIVE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .team-row:hover { background-color: #1f2937; }
+    .positive { color: #22c55e; }
+    .negative { color: #ef4444; }
+    .best4 { font-size: 0.8rem; color: #a3e635; }
+  </style>
 </head>
-<body>
-
-    <!-- Crypto Holdings -->
-    <div class="crypto-container">
-        <div class="crypto-title">League Crypto Holdings</div>
-        <div id="btc-holding" class="holding loading">BTC: Loading...</div>
-        <div id="eth-holding" class="holding loading">ETH: Loading...</div>
-        <div id="total-value" class="total loading">Total: Loading...</div>
-        <div>Original Cost: $2,880</div>
-        <div id="change-value" class="change loading">Change: Loading...</div>
-        <div class="chart-container">
-            <div id="chart-status" class="chart-loading">Loading chart...</div>
-            <canvas id="portfolioChart"></canvas>
-        </div>
-        <p style="font-size:0.9em; color:#777; margin-top:10px;">
-            Updated on page load • Source: CoinGecko
-        </p>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <div class="max-w-7xl mx-auto p-4">
+    <h1 class="text-4xl font-bold text-center my-6">2026 PGA Championship Pool</h1>
+    <p class="text-center text-zinc-400 mb-2">Best 4 golfers averaged • Lowest wins • $460 pot</p>
+    
+    <div class="flex justify-center gap-4 mb-8 flex-wrap">
+      <button onclick="manualRefresh()" 
+              class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium flex items-center gap-2">
+        <i class="fas fa-sync"></i> Refresh Live Data (ESPN)
+      </button>
+      <button onclick="showDebugModal()" 
+              class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg font-medium flex items-center gap-2">
+        <i class="fas fa-bug"></i> Show Debug Info
+      </button>
     </div>
 
-    <!-- Fantasy Picks -->
-    <h2>Fantasy TD Scorer Picks - Week 12</h2>
-    
-    <h3>Current Picks</h3>
-    <table id="picksTable">
-        <thead>
-            <tr>
-                <th></th>
-                <th>Matchup</th>
-                <th>Fantasy Team</th>
-                <th>Player Name</th>
-                <th>Timestamp</th>
+    <div id="statusBar" class="text-center text-sm mb-6 text-zinc-400"></div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-zinc-700 mb-6">
+      <button onclick="switchTab(0)" id="tab0" class="tab-button px-6 py-3 font-medium border-b-2 border-blue-500 text-blue-400">Teams</button>
+      <button onclick="switchTab(1)" id="tab1" class="tab-button px-6 py-3 font-medium text-zinc-400">Full Field</button>
+    </div>
+
+    <!-- TEAMS TAB -->
+    <div id="content0">
+      <div id="simLoading" class="hidden text-center py-8 text-zinc-400">
+        <i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>
+        Running Monte Carlo simulation (~5000 runs)...
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="teamsTable">
+          <thead>
+            <tr class="border-b border-zinc-700">
+              <th class="text-left py-3 px-4">Rank</th>
+              <th class="text-left py-3 px-4">Entrant + Best 4</th>
+              <th class="text-center py-3 px-4">Team Avg</th>
+              <th class="text-center py-3 px-4">% to Win</th>
+              <th class="w-8"></th>
             </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    
-    <h3>Submit Your Pick</h3>
-    <div id="form">
-        <select id="teamSelect">
-            <option value="">Select your fantasy team</option>
-            <option value="We Be Chubbin&apos;">We Be Chubbin'</option>
-            <option value="Big Digg Energy">Big Digg Energy</option>
-            <option value="Blacked Out Bill">Blacked Out Bill</option>
-            <option value="Dr. Bozorgh">Dr. Bozorgh</option>
-            <option value="Dr. Gonzo&apos;s Advice">Dr. Gonzo's Advice</option>
-            <option value="Westboro Baptist Church">Westboro Baptist Church</option>
-            <option value="Glizzy Gobblers">Glizzy Gobblers</option>
-            <option value="Elder Statesman">Elder Statesman</option>
-            <option value="Beth&apos;s Divorce Attorney">Beth's Divorce Attorney</option>
-            <option value="Hawk Tua">Hawk Tua</option>
-            <option value="Little Lebowski Urban Achievers">Little Lebowski Urban Achievers</option>
-            <option value="Joe Horn&apos;s Favorite Son">Joe Horn's Favorite Son</option>
-        </select>
-        <input type="text" id="playerInput" placeholder="Enter NFL player name">
-        <button id="submitBtn" onclick="submitPick()">Submit Pick</button>
-        <p id="result"></p>
+          </thead>
+          <tbody id="teamsBody" class="divide-y divide-zinc-800"></tbody>
+        </table>
+      </div>
     </div>
 
-    <script>
-        // === CRYPTO HOLDINGS ===
-        const btcHolding = 0.0112;
-        const ethHolding = 0.362;
-        const originalCost = 2880;
-        let chart = null;
+    <!-- FIELD TAB -->
+    <div id="content1" class="hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="fieldTable">
+          <thead>
+            <tr class="border-b border-zinc-700">
+              <th class="text-left py-3 px-4">Player</th>
+              <th class="text-center py-3 px-4">To Par</th>
+              <th class="text-center py-3 px-4">Thru</th>
+              <th class="text-center py-3 px-4">Today</th>
+            </tr>
+          </thead>
+          <tbody id="fieldBody" class="divide-y divide-zinc-800"></tbody>
+        </table>
+      </div>
+    </div>
 
-        async function updateCryptoHoldings() {
-            const btcEl = document.getElementById('btc-holding');
-            const ethEl = document.getElementById('eth-holding');
-            const totalEl = document.getElementById('total-value');
-            const changeEl = document.getElementById('change-value');
-            const chartStatus = document.getElementById('chart-status');
+    <div class="text-center text-xs text-zinc-500 mt-8">
+      Last updated: <span id="lastUpdate">Never</span>
+    </div>
+  </div>
 
-            try {
-                const currentRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
-                const currentData = await currentRes.json();
+  <!-- Debug Modal -->
+  <div id="debugModal" onclick="if(event.target.id==='debugModal')hideDebugModal()" 
+       class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+    <div class="bg-zinc-900 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">🔧 Full Debug Information</h2>
+        <button onclick="hideDebugModal()" class="text-zinc-400 hover:text-white text-xl">✕</button>
+      </div>
+      <div id="debugContent" class="space-y-8 text-sm"></div>
+    </div>
+  </div>
 
-                const btcPrice = currentData.bitcoin.usd;
-                const ethPrice = currentData.ethereum.usd;
+  <!-- Team breakdown modal (now shows ALL golfers) -->
+  <div id="modal" onclick="if(event.target.id==='modal')closeModal()" 
+       class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div id="modalContent" class="bg-zinc-900 rounded-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-auto"></div>
+  </div>
 
-                const btcValue = btcHolding * btcPrice;
-                const ethValue = ethHolding * ethPrice;
-                const totalValue = btcValue + ethValue;
+  <script>
+    const entrants = [
+      {name: "Tyler Happ", golfers: ["Scottie Scheffler","Xander Schauffele","Justin Rose","Rickie Fowler","Sam Burns","Brooks Koepka","Alex Fitzpatrick","Max Homa"]},
+      {name: "Charles Vinsonhaler", golfers: ["Scottie Scheffler","Tyrrell Hatton","Jacob Bridgeman","Keegan Bradley","Rickie Fowler","Jason Day","Bud Cauley"]},
+      {name: "Chad Tart", golfers: ["Scottie Scheffler","Xander Schauffele","Ludvig Åberg","Tommy Fleetwood","Sam Stevens","Alex Fitzpatrick"]},
+      {name: "Tessa Johnson", golfers: ["Cameron Young","Ben Griffin","Akshay Bhatia","Patrick Reed","Adam Scott","Shane Lowry","Sungjae Im"]},
+      {name: "Bill Sessler", golfers: ["Xander Schauffele","Aaron Rai","Sam Burns","Adam Scott","Jason Day","Shane Lowry","Rickie Fowler","Jordan Spieth","Brooks Koepka","Brandt Snedeker"]},
+      {name: "Logan Robbins", golfers: ["Scottie Scheffler","Chris Gotterup","Ludvig Åberg","Patrick Reed","Brooks Koepka","Wyndham Clark","Alex Fitzpatrick","Sungjae Im"]},
+      {name: "Eric Oplinger", golfers: ["Scottie Scheffler","Ludvig Åberg","Patrick Cantlay","Nicolai Højgaard","Rickie Fowler","Sungjae Im","Brooks Koepka","Wyndham Clark"]},
+      {name: "Tim Johnson", golfers: ["Scottie Scheffler","Tommy Fleetwood","Shane Lowry","Jordan Spieth","Gary Woodland","Rickie Fowler","Brooks Koepka","Max Homa","Wyndham Clark"]},
+      {name: "Jon Sousa", golfers: ["Scottie Scheffler","Jon Rahm","Rickie Fowler","Sam Burns","Adam Scott","Brooks Koepka","Alex Smalley","Alex Fitzpatrick","Keith Mitchell","Sahith Theegala"]},
+      {name: "Kevin Mulhern", golfers: ["Scottie Scheffler","Justin Rose","JJ Spaun","Patrick Cantlay","Sam Burns","Shane Lowry"]},
+      {name: "Trey Anderson", golfers: ["Cameron Young","Ludvig Åberg","Nicolai Højgaard","Shane Lowry","Rickie Fowler","Gary Woodland","Alex Fitzpatrick","Brooks Koepka"]},
+      {name: "Hunter Bryson", golfers: ["Scottie Scheffler","JJ Spaun","Xander Schauffele","Ludvig Åberg","Hideki Matsuyama"]},
+      {name: "Ben Scerri", golfers: ["Cameron Young","Russell Henley","Tyrrell Hatton","Hideki Matsuyama","Rickie Fowler","Sam Burns"]},
+      {name: "Mike Sawaia", golfers: ["Scottie Scheffler","Xander Schauffele","Tommy Fleetwood","Jon Rahm","Hideki Matsuyama"]},
+      {name: "Emma Sawaia", golfers: ["Matt Fitzpatrick","Tommy Fleetwood","Jon Rahm","Tyrrell Hatton","Rickie Fowler","Wyndham Clark"]},
+      {name: "Mikey Goldberg", golfers: ["Scottie Scheffler","Tommy Fleetwood","Xander Schauffele","Ludvig Åberg","Rickie Fowler","Brooks Koepka"]},
+      {name: "Berk Olgun", golfers: ["Scottie Scheffler","Jordan Spieth","Sam Burns","Adam Scott","Rickie Fowler","Shane Lowry","Jason Day","Brooks Koepka","Sungjae Im","Wyndham Clark"]},
+      {name: "Max Hattman", golfers: ["Scottie Scheffler","Tommy Fleetwood","Ludvig Åberg","Patrick Reed","Sam Burns","Wyndham Clark","Brooks Koepka"]},
+      {name: "Sarah Anderson", golfers: ["Scottie Scheffler","Tommy Fleetwood","Ludvig Åberg","David Puig","Sam Stevens","Matt McCarty"]},
+      {name: "Greg Grattan", golfers: ["Rory McIlroy","Ludvig Åberg","Xander Schauffele","Sam Burns","Jordan Spieth","Alex Fitzpatrick","Sungjae Im","Brooks Koepka"]},
+      {name: "Livy Franklin", golfers: ["Scottie Scheffler","Jon Rahm","Shane Lowry","Corey Conners","Jordan Spieth","Sungjae Im","JT Poston","Alex Fitzpatrick","Lucas Glover","Christian Bezuidenhout"]},
+      {name: "John Morrison", golfers: ["Scottie Scheffler","Akshay Bhatia","Sam Burns","Shane Lowry","Joaquin Niemann","Corey Conners","Brooks Koepka","Sahith Theegala","Wyndham Clark","Max Homa"]},
+      {name: "Nick Rosshirt", golfers: ["Scottie Scheffler","Jon Rahm","Rickie Fowler","Sam Burns","Adam Scott","Alex Fitzpatrick","Sungjae Im","Brooks Koepka","Alex Smalley","Sudarshan Yellamaraju"]}
+    ];
 
-                const changeAmount = totalValue - originalCost;
-                const changePercent = ((changeAmount / originalCost) * 100).toFixed(2);
-                const changeSign = changeAmount >= 0 ? '+' : '';
-                const changeClass = changeAmount >= 0 ? 'positive' : 'negative';
+    let playersMap = new Map();
+    let lastRawData = null;
+    let fetchError = null;
 
-                btcEl.innerHTML = `BTC (0.0112 @ <span class="price">$${btcPrice.toLocaleString()}</span>): <strong>$${btcValue.toFixed(2)}</strong>`;
-                ethEl.innerHTML = `ETH (0.362 @ <span class="price">$${ethPrice.toLocaleString()}</span>): <strong>$${ethValue.toFixed(2)}</strong>`;
-                totalEl.textContent = `Total: $${totalValue.toFixed(2)}`;
-                changeEl.innerHTML = `Change: ${changeSign}$${Math.abs(changeAmount).toFixed(2)} (${changeSign}${changePercent}%)`;
-                changeEl.className = `change ${changeClass}`;
+    async function fetchLiveData() {
+      const statusEl = document.getElementById("statusBar");
+      const updateEl = document.getElementById("lastUpdate");
+      statusEl.innerHTML = `<span class="text-yellow-400">🔄 Fetching from ESPN Scoreboard...</span>`;
+      updateEl.textContent = "Fetching...";
+      fetchError = null;
 
-                [btcEl, ethEl, totalEl, changeEl].forEach(el => el.classList.remove('loading'));
+      try {
+        const url = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?event=401811947&t=${Date.now()}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                await updateChart(chartStatus);
-            } catch (err) {
-                console.error("Crypto load error:", err);
-                btcEl.textContent = 'BTC: Error'; ethEl.textContent = 'ETH: Error';
-                totalEl.textContent = 'Total: Error'; changeEl.textContent = 'Change: Error';
-                [btcEl, ethEl, totalEl, changeEl].forEach(el => el.classList.add('error'));
-                chartStatus.textContent = 'Chart: Failed to load';
-                chartStatus.className = 'chart-error';
-            }
-        }
+        const data = await res.json();
+        lastRawData = data;
 
-        async function updateChart(statusEl) {
-            try {
-                const from = Math.floor(new Date('2025-09-06').getTime() / 1000);
-                const to = Math.floor(Date.now() / 1000);
+        playersMap.clear();
 
-                const btcUrl = `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=${from}&to=${to}&precision=2`;
-                const ethUrl = `https://api.coingecko.com/api/v3/coins/ethereum/market_chart/range?vs_currency=usd&from=${from}&to=${to}&precision=2`;
+        const competitors = data.events?.[0]?.competitions?.[0]?.competitors || [];
 
-                const [btcRes, ethRes] = await Promise.all([fetch(btcUrl), fetch(ethUrl)]);
-                const btcData = await btcRes.json();
-                const ethData = await ethRes.json();
+        competitors.forEach(c => {
+          let name = c.athlete?.displayName?.trim();
+          if (!name) return;
 
-                if (!btcData.prices?.length || !ethData.prices?.length) {
-                    throw new Error("No price data");
-                }
+          // Name normalization
+          name = name.replace("J.J. Spaun", "JJ Spaun")
+                     .replace("J.T. Poston", "JT Poston")
+                     .replace("Joaquín Niemann", "Joaquin Niemann")
+                     .replace("Christiaan Bezuidenhout", "Christian Bezuidenhout");
 
-                const labels = btcData.prices.map(p => {
-                    const date = new Date(p[0]);
-                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                });
+          // Score parsing
+          let toPar = 0;
+          if (c.score !== undefined) {
+            const scoreStr = String(c.score).trim();
+            toPar = parseFloat(scoreStr.replace('+', '').replace('−', '-')) || 0;
+          }
 
-                const btcValues = btcData.prices.map(p => (btcHolding * p[1]).toFixed(2));
-                const ethValues = ethData.prices.map(p => (ethHolding * p[1]).toFixed(2));
-                const totalValues = btcData.prices.map((_, i) => 
-                    (btcHolding * btcData.prices[i][1] + ethHolding * ethData.prices[i][1]).toFixed(2)
-                );
+          // Thru parsing (improved)
+          let thru = "—";
+          if (c.status?.type?.shortDetail) thru = c.status.type.shortDetail;
+          else if (c.thru) thru = c.thru;
+          else if (c.linescores?.[0]?.displayValue) thru = c.linescores[0].displayValue;
 
-                const ctx = document.getElementById('portfolioChart').getContext('2d');
-                if (chart) chart.destroy();
+          playersMap.set(name, {
+            toPar: toPar,
+            thru: thru,
+            today: c.score || ""
+          });
+        });
 
-                chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            { label: 'BTC Value', data: btcValues, borderColor: '#f7931a', backgroundColor: 'rgba(247,147,26,0.1)', fill: true, tension: 0.3, pointRadius: 0 },
-                            { label: 'ETH Value', data: ethValues, borderColor: '#627eea', backgroundColor: 'rgba(98,126,234,0.1)', fill: true, tension: 0.3, pointRadius: 0 },
-                            { label: 'Total', data: totalValues, borderColor: '#2ecc71', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 3 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top' }, tooltip: { enabled: false } },
-                        interaction: { mode: null },
-                        scales: {
-                            x: { ticks: { maxTicksLimit: 10 }, grid: { display: false } },
-                            y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' } }
-                        }
-                    }
-                });
+        statusEl.innerHTML = `<span class="text-green-400">✅ Loaded ${playersMap.size} players from ESPN</span>`;
+        updateEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        renderAll();
+      } catch(e) {
+        fetchError = e.message;
+        statusEl.innerHTML = `<span class="text-red-400">❌ ${e.message}</span>`;
+        updateEl.textContent = "Failed – see Debug";
+        console.error(e);
+      }
+    }
 
-                statusEl.remove();
-            } catch (err) {
-                console.error("Chart error:", err);
-                statusEl.textContent = 'Chart: No data available';
-                statusEl.className = 'chart-error';
-            }
-        }
+    function getTeamScore(entry) {
+      let matched = 0;
+      let scores = entry.golfers.map(g => {
+        const p = playersMap.get(g);
+        if (p) matched++;
+        return {name: g, toPar: p ? p.toPar : 999, thru: p ? p.thru : "—"};
+      }).sort((a,b) => a.toPar - b.toPar);
 
-        // === FANTASY PICKS ===
-        const firebaseConfig = {
-            apiKey: "AIzaSyAxee9yy6lSPcYGYlYtw4_YTKHd2n0_kns",
-            authDomain: "csb3-2bdb6.firebaseapp.com",
-            databaseURL: "https://csb3-2bdb6-default-rtdb.firebaseio.com",
-            projectId: "csb3-2bdb6",
-            storageBucket: "csb3-2bdb6.firebasestorage.app",
-            messagingSenderId: "594023458781",
-            appId: "1:594023458781:web:3a0d3571eabf5f0d1c3834"
-        };
+      const best4 = scores.slice(0,4);
+      const avg = (best4.reduce((sum, s) => sum + s.toPar, 0) / 4).toFixed(1);
+      return {avg: parseFloat(avg), best4, allScores: scores, matchedCount: matched};
+    }
 
-        const matchups = [
-            "Pittsburgh Steelers @ Chicago Bears",
-            "New England Patriots @ Cincinnati Bengals",
-            "New York Giants @ Detroit Lions",
-            "Minnesota Vikings @ Green Bay Packers",
-            "Seattle Seahawks @ Tennessee Titans",
-            "Indianapolis Colts @ Kansas City Chiefs",
-            "New York Jets @ Baltimore Ravens",
-            "Cleveland Browns @ Las Vegas Raiders",
-            "Jacksonville Jaguars @ Arizona Cardinals",
-            "Philadelphia Eagles @ Dallas Cowboys",
-            "Atlanta Falcons @ New Orleans Saints",
-            "Tampa Bay Buccaneers @ Los Angeles Rams",
-            "Carolina Panthers @ San Francisco 49ers"
-        ];
-
-        const EXTRA_MATCHUP_KEY = "extra-entry-fuckup";
-        let selectedMatchup = null;
-        let picksRef = null;
-
-        function updatePicksTable(data) {
-            const tbody = document.getElementById('picksTable').querySelector('tbody');
-            tbody.innerHTML = '';
-            const takenMatchups = new Set();
-            const extraPicks = [];
-
-            Object.values(data).forEach(p => {
-                if (p.matchup === EXTRA_MATCHUP_KEY) {
-                    extraPicks.push(p);
-                } else {
-                    takenMatchups.add(p.matchup);
-                }
+    function calculateWinProbabilities() {
+      const simLoading = document.getElementById("simLoading");
+      simLoading.classList.remove("hidden");
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const sims = 5000;
+          const winCounts = new Array(entrants.length).fill(0);
+          for (let i = 0; i < sims; i++) {
+            let teamAvgs = entrants.map((entry, idx) => {
+              let projected = entry.golfers.map(g => {
+                const current = playersMap.get(g) || {toPar: 0};
+                return current.toPar + (Math.random() - 0.5) * 12;
+              });
+              projected.sort((a,b) => a - b);
+              return {idx, avg: (projected[0]+projected[1]+projected[2]+projected[3])/4};
             });
+            teamAvgs.sort((a,b) => a.avg - b.avg);
+            winCounts[teamAvgs[0].idx]++;
+          }
+          simLoading.classList.add("hidden");
+          resolve(entrants.map((_, i) => Math.round((winCounts[i] / sims) * 100)));
+        }, 10);
+      });
+    }
 
-            matchups.forEach((matchup) => {
-                const isTaken = takenMatchups.has(matchup);
-                const pick = Object.values(data).find(p => p.matchup === matchup) || { fantasyTeam: "N/A", player: "N/A", timestamp: "N/A" };
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><div class="radio-circle ${selectedMatchup === matchup ? 'selected' : ''} ${isTaken ? 'taken' : ''}" 
-                         onclick="${isTaken ? '' : `selectMatchup('${matchup}', this)`}"></div></td>
-                    <td>${matchup}</td>
-                    <td>${pick.fantasyTeam}</td>
-                    <td>${pick.player}</td>
-                    <td>${pick.timestamp}</td>
-                `;
-                tbody.appendChild(row);
-            });
+    async function renderTeams() {
+      const probs = await calculateWinProbabilities();
+      const tbody = document.getElementById("teamsBody");
+      tbody.innerHTML = "";
 
-            extraPicks.forEach((pick, index) => {
-                const isLast = index === extraPicks.length - 1;
-                const key = `${EXTRA_MATCHUP_KEY}-${index}`;
-                const row = document.createElement('tr');
-                row.className = 'extra-row';
-                row.innerHTML = `
-                    <td><div class="radio-circle ${selectedMatchup === key ? 'selected' : ''} ${!isLast ? 'taken' : ''}" 
-                         onclick="${!isLast ? '' : `selectMatchup('${key}', this)`}"></div></td>
-                    <td>Extra entry if you fucked up</td>
-                    <td>${pick.fantasyTeam}</td>
-                    <td>${pick.player}</td>
-                    <td>${pick.timestamp}</td>
-                `;
-                tbody.appendChild(row);
-            });
+      const teamsWithData = entrants.map((entry, i) => {
+        const team = getTeamScore(entry);
+        return { ...entry, teamAvg: team.avg, best4: team.best4, allScores: team.allScores, prob: probs[i] };
+      }).sort((a,b) => a.teamAvg - b.teamAvg);
 
-            const emptyKey = `${EXTRA_MATCHUP_KEY}-${extraPicks.length}`;
-            const emptyRow = document.createElement('tr');
-            emptyRow.className = 'extra-row';
-            emptyRow.innerHTML = `
-                <td><div class="radio-circle ${selectedMatchup === emptyKey ? 'selected' : ''}" 
-                     onclick="selectMatchup('${emptyKey}', this)"></div></td>
-                <td>Extra entry if you fucked up</td>
-                <td>N/A</td>
-                <td>N/A</td>
-                <td>N/A</td>
-            `;
-            tbody.appendChild(emptyRow);
-        }
+      teamsWithData.forEach((team, index) => {
+        const best4Str = team.best4.map(p => `${p.name} (${p.toPar > 0 ? '+' : ''}${p.toPar})`).join(", ");
+        const row = document.createElement("tr");
+        row.className = "team-row cursor-pointer border-b border-zinc-800 hover:bg-zinc-900";
+        row.innerHTML = `
+          <td class="py-4 px-4 font-mono">${index+1}</td>
+          <td class="py-4 px-4">
+            <div class="font-medium">${team.name}</div>
+            <div class="best4 text-xs">Best 4: ${best4Str}</div>
+          </td>
+          <td class="py-4 px-4 text-center font-mono text-xl ${team.teamAvg < 0 ? 'positive' : team.teamAvg > 0 ? 'negative' : ''}">${team.teamAvg}</td>
+          <td class="py-4 px-4 text-center font-bold text-emerald-400">${team.prob}%</td>
+          <td class="py-4 px-4"><i class="fas fa-chevron-down"></i></td>
+        `;
+        row.onclick = () => showTeamBreakdown(team);
+        tbody.appendChild(row);
+      });
+    }
 
-        function selectMatchup(matchup, el) {
-            document.querySelectorAll('.radio-circle.selected').forEach(e => e.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedMatchup = matchup;
-        }
+    function showTeamBreakdown(team) {
+      let html = `<h3 class="text-2xl font-bold mb-6">${team.name} — Team Avg <span class="${team.teamAvg < 0 ? 'positive' : 'negative'}">${team.teamAvg}</span></h3>`;
+      html += `<div class="space-y-4">`;
+      
+      team.allScores.forEach(p => {
+        const isBest4 = team.best4.some(b => b.name === p.name);
+        html += `
+          <div class="${isBest4 ? 'bg-emerald-900/30 border border-emerald-500' : 'bg-zinc-800'} p-5 rounded-xl flex justify-between items-center">
+            <div>
+              <div class="font-semibold">${p.name}</div>
+              <div class="text-sm text-zinc-400">Thru ${p.thru}</div>
+            </div>
+            <div class="text-4xl font-mono ${p.toPar < 0 ? 'positive' : p.toPar > 0 ? 'negative' : ''}">
+              ${p.toPar > 0 ? '+' : ''}${p.toPar}
+            </div>
+            ${isBest4 ? '<span class="text-xs bg-emerald-600 px-3 py-1 rounded-full">BEST 4</span>' : ''}
+          </div>`;
+      });
+      
+      html += `</div><button onclick="closeModal()" class="mt-8 w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-lg">Close</button>`;
+      document.getElementById("modalContent").innerHTML = html;
+      document.getElementById("modal").classList.remove("hidden");
+    }
 
-        function submitPick() {
-            const team = document.getElementById('teamSelect').value;
-            const player = document.getElementById('playerInput').value.trim();
-            const result = document.getElementById('result');
-            const btn = document.getElementById('submitBtn');
+    function closeModal() {
+      document.getElementById("modal").classList.add("hidden");
+    }
 
-            if (!selectedMatchup || !team || !player) {
-                result.textContent = 'Select matchup, team, and player.';
-                return;
-            }
+    function renderField() {
+      const tbody = document.getElementById("fieldBody");
+      tbody.innerHTML = "";
+      Array.from(playersMap.entries())
+        .sort((a,b) => a[1].toPar - b[1].toPar)
+        .forEach(([name, data]) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="py-3 px-4">${name}</td>
+            <td class="py-3 px-4 text-center font-mono text-lg ${data.toPar < 0 ? 'positive' : data.toPar > 0 ? 'negative' : ''}">${data.toPar > 0 ? '+' : ''}${data.toPar}</td>
+            <td class="py-3 px-4 text-center">${data.thru}</td>
+            <td class="py-3 px-4 text-center">${data.today}</td>
+          `;
+          tbody.appendChild(row);
+        });
+    }
 
-            const isExtra = selectedMatchup.startsWith(EXTRA_MATCHUP_KEY);
-            const matchupToSave = isExtra ? EXTRA_MATCHUP_KEY : selectedMatchup;
+    async function renderAll() {
+      await renderTeams();
+      renderField();
+    }
 
-            const timestamp = new Date().toLocaleString();
-            picksRef.push({ matchup: matchupToSave, fantasyTeam: team, player, timestamp })
-                .then(() => {
-                    result.textContent = 'Pick submitted!';
-                    btn.classList.add('submitted');
-                    setTimeout(() => btn.classList.remove('submitted'), 2000);
-                    selectedMatchup = null;
-                    document.getElementById('playerInput').value = '';
-                    document.querySelector('.radio-circle.selected')?.classList.remove('selected');
-                })
-                .catch(err => {
-                    result.textContent = 'Error: ' + err.message;
-                });
-        }
+    function manualRefresh() { fetchLiveData(); }
 
-        // === ON LOAD ===
-        window.onload = function() {
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
-            picksRef = db.ref('picks/week12');  // ← Week 12
+    function switchTab(n) {
+      document.querySelectorAll('.tab-button').forEach((b,i) => {
+        b.classList.toggle('border-blue-500', i===n);
+        b.classList.toggle('text-blue-400', i===n);
+        b.classList.toggle('text-zinc-400', i!==n);
+      });
+      document.getElementById("content0").classList.toggle("hidden", n!==0);
+      document.getElementById("content1").classList.toggle("hidden", n!==1);
+    }
 
-            // Load initial table (empty DB = all matchups shown)
-            updatePicksTable({});
+    function showDebugModal() {
+      const content = document.getElementById("debugContent");
+      let html = `<div><strong>Fetch Status:</strong> ${fetchError ? `<span class="text-red-400">FAILED – ${fetchError}</span>` : `<span class="text-green-400">SUCCESS</span>`}</div>`;
+      html += `<div><strong>Players loaded from ESPN:</strong> ${playersMap.size}</div>`;
+      html += `<div><strong>Last update:</strong> ${document.getElementById("lastUpdate").textContent}</div><hr>`;
 
-            // Listen for real-time updates
-            picksRef.on('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                updatePicksTable(data);
-            });
+      html += `<div class="font-semibold">Pool Golfer Matching:</div>`;
+      entrants.forEach(entry => {
+        const team = getTeamScore(entry);
+        const percent = Math.round((team.matchedCount / entry.golfers.length) * 100);
+        html += `<div class="flex justify-between text-xs"><span>${entry.name}</span><span class="${percent===100?'text-green-400':'text-yellow-400'}">${team.matchedCount}/${entry.golfers.length} (${percent}%)</span></div>`;
+      });
 
-            // Load crypto data
-            updateCryptoHoldings();
-        };
-    </script>
+      html += `<hr><div class="font-semibold">All pool golfers (matched / not matched)</div>`;
+      const allPool = new Set();
+      entrants.forEach(e => e.golfers.forEach(g => allPool.add(g)));
+      html += `<div class="grid grid-cols-2 gap-1 text-xs max-h-64 overflow-auto border border-zinc-700 p-3 rounded-xl">`;
+      Array.from(allPool).sort().forEach(g => {
+        const found = playersMap.has(g);
+        html += `<div class="${found ? 'text-green-400' : 'text-red-400'}">${g} ${found ? '✅' : '❌'}</div>`;
+      });
+      html += `</div>`;
+
+      // Extra debug: sample thru values
+      if (lastRawData) {
+        html += `<hr><div class="font-semibold">Sample Thru values (first 5 players)</div>`;
+        const sample = (lastRawData.events?.[0]?.competitions?.[0]?.competitors || []).slice(0,5);
+        html += `<pre class="bg-black p-3 rounded-2xl overflow-auto text-[10px]">${JSON.stringify(sample.map(c => ({name: c.athlete?.displayName, thru: c.status?.type?.shortDetail || c.thru})), null, 2)}</pre>`;
+      }
+
+      content.innerHTML = html;
+      document.getElementById("debugModal").classList.remove("hidden");
+    }
+
+    function hideDebugModal() {
+      document.getElementById("debugModal").classList.add("hidden");
+    }
+
+    // Initial load
+    fetchLiveData();
+  </script>
 </body>
 </html>
