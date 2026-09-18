@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Everything here is append-only: anyone can CREATE a new document, but once
+// a document exists at a given path, Firestore treats any further write to
+// that same path as an "update" -- which is denied below. There is no
+// "overwrite" code path for anyone to misuse, which is what makes this
+// vandalism-proof: the very first write to a given path is permanent.
+//
+// Two separate locks enforce the parlay's rules:
+//   - picks/{weekId}/entries/{matchupId}   -> one pick per NFL matchup
+//   - picks/{weekId}/teamLocks/{teamSlug}  -> one pick per fantasy team
+// A pick submission writes both documents in a single batch, so it only
+// succeeds if BOTH the matchup and the team are still free; if either one
+// is already taken, the whole batch is rejected atomically.
+//
+// otherEntries/{weekId}/notes/{noteId} is a free-for-all scratch log (no
+// per-team limit), still create-only so old notes can't be edited or erased.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /picks/{weekId}/entries/{matchupId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['fantasyTeam', 'player', 'matchup', 'timestamp'])
+                    && request.resource.data.fantasyTeam is string
+                    && request.resource.data.fantasyTeam.size() > 0
+                    && request.resource.data.fantasyTeam.size() < 100
+                    && request.resource.data.player is string
+                    && request.resource.data.player.size() > 0
+                    && request.resource.data.player.size() < 100;
+      allow update, delete: if false;
+    }
+
+    match /picks/{weekId}/teamLocks/{teamSlug} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['fantasyTeam', 'matchupId', 'timestamp'])
+                    && request.resource.data.fantasyTeam is string
+                    && request.resource.data.fantasyTeam.size() > 0;
+      allow update, delete: if false;
+    }
+
+    match /otherEntries/{weekId}/notes/{noteId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['fantasyTeam', 'note', 'timestamp'])
+                    && request.resource.data.fantasyTeam is string
+                    && request.resource.data.fantasyTeam.size() > 0
+                    && request.resource.data.note is string
+                    && request.resource.data.note.size() > 0
+                    && request.resource.data.note.size() < 500;
+      allow update, delete: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

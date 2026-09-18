@@ -1,365 +1,1099 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PGA Championship 2026 Pool • LIVE</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; }
-    .team-row:hover { background-color: #1f2937; }
-    .positive { color: #22c55e; }
-    .negative { color: #ef4444; }
-    .best4 { font-size: 0.8rem; color: #a3e635; }
-  </style>
-</head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen">
-  <div class="max-w-7xl mx-auto p-4">
-    <h1 class="text-4xl font-bold text-center my-6">2026 PGA Championship Pool</h1>
-    <p class="text-center text-zinc-400 mb-2">Best 4 golfers averaged • Lowest wins • $460 pot</p>
-    
-    <div class="flex justify-center gap-4 mb-8 flex-wrap">
-      <button onclick="manualRefresh()" 
-              class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium flex items-center gap-2">
-        <i class="fas fa-sync"></i> Refresh Live Data (ESPN)
-      </button>
-      <button onclick="showDebugModal()" 
-              class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg font-medium flex items-center gap-2">
-        <i class="fas fa-bug"></i> Show Debug Info
-      </button>
-    </div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly TD Parlay</title>
+<style>
+  :root {
+    --green: #2e7d32;
+    --green-dark: #1b5e20;
+    --red: #c62828;
+    --border: #ddd;
+    --bg-taken: #f6f6f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    max-width: 900px;
+    margin-inline: auto;
+    color: #222;
+    background: #fff;
+  }
+  h1 { margin-bottom: 4px; }
+  h2 { font-size: 1.2em; margin: 0 0 4px; }
+  .subhead { color: #666; font-size: 0.95em; margin-bottom: 4px; }
+  .odds-meta { color: #888; font-size: 0.85em; }
+  .odds-meta.stale { color: var(--red); font-weight: bold; }
 
-    <div id="statusBar" class="text-center text-sm mb-6 text-zinc-400"></div>
+  /* League holdings value section -- categorical palette, fixed hue order */
+  .holdings-section {
+    --series-btc: #2a78d6;
+    --series-spcx: #eb6834;
+    --series-total: #1baf7a;
+    margin-bottom: 26px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .holdings-total {
+    font-size: 2.1em;
+    font-weight: 700;
+    margin: 2px 0 12px;
+  }
+  .holdings-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-tile {
+    flex: 1 1 140px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .stat-tile .stat-label {
+    font-size: 0.78em;
+    color: #777;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat-tile .stat-swatch {
+    width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex: 0 0 auto;
+  }
+  .stat-tile .stat-value {
+    font-size: 1.15em;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .chart-container {
+    position: relative;
+    height: 240px;
+  }
 
-    <!-- Tabs -->
-    <div class="flex border-b border-zinc-700 mb-6">
-      <button onclick="switchTab(0)" id="tab0" class="tab-button px-6 py-3 font-medium border-b-2 border-blue-500 text-blue-400">Teams</button>
-      <button onclick="switchTab(1)" id="tab1" class="tab-button px-6 py-3 font-medium text-zinc-400">Full Field</button>
-    </div>
+  .refresh-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 8px 0 20px;
+  }
+  button.refresh-btn {
+    padding: 7px 14px;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
+  }
+  button.refresh-btn:disabled { background: #ccc; color: #777; cursor: not-allowed; }
+  .refresh-status { color: #888; font-size: 0.8em; }
 
-    <!-- TEAMS TAB -->
-    <div id="content0">
-      <div id="simLoading" class="hidden text-center py-8 text-zinc-400">
-        <i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>
-        Running Monte Carlo simulation (~5000 runs)...
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm" id="teamsTable">
-          <thead>
-            <tr class="border-b border-zinc-700">
-              <th class="text-left py-3 px-4">Rank</th>
-              <th class="text-left py-3 px-4">Entrant + Best 4</th>
-              <th class="text-center py-3 px-4">Team Avg</th>
-              <th class="text-center py-3 px-4">% to Win</th>
-              <th class="w-8"></th>
-            </tr>
-          </thead>
-          <tbody id="teamsBody" class="divide-y divide-zinc-800"></tbody>
-        </table>
-      </div>
-    </div>
+  .matchup-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .matchup-card.taken { background: var(--bg-taken); }
+  .matchup-title {
+    font-weight: 600;
+    font-size: 1.05em;
+    margin-bottom: 2px;
+  }
+  .kickoff { color: #777; font-size: 0.85em; }
 
-    <!-- FIELD TAB -->
-    <div id="content1" class="hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm" id="fieldTable">
-          <thead>
-            <tr class="border-b border-zinc-700">
-              <th class="text-left py-3 px-4">Player</th>
-              <th class="text-center py-3 px-4">To Par</th>
-              <th class="text-center py-3 px-4">Thru</th>
-              <th class="text-center py-3 px-4">Today</th>
-            </tr>
-          </thead>
-          <tbody id="fieldBody" class="divide-y divide-zinc-800"></tbody>
-        </table>
-      </div>
-    </div>
+  .pick-details { margin-top: 4px; }
+  .pick-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    margin-top: 6px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Comfortable tap target on mobile. */
+    min-height: 24px;
+  }
+  .pick-summary::-webkit-details-marker { display: none; }
+  .pick-summary:hover { background: #ececec; }
+  .pick-summary .chevron { transition: transform 0.15s; color: #888; }
+  details[open] > .pick-summary .chevron { transform: rotate(180deg); }
+  .pick-area { padding-top: 12px; }
 
-    <div class="text-center text-xs text-zinc-500 mt-8">
-      Last updated: <span id="lastUpdate">Never</span>
-    </div>
-  </div>
+  .pick-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  select, input[type="text"] {
+    padding: 10px 8px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+    font-size: 1em;
+    flex: 1 1 220px;
+    min-width: 180px;
+  }
+  button.submit-btn {
+    padding: 11px 16px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  @media (min-width: 480px) {
+    button.submit-btn { width: auto; }
+  }
+  button.submit-btn:hover { background: var(--green-dark); }
+  button.submit-btn:disabled { background: #999; cursor: not-allowed; }
 
-  <!-- Debug Modal -->
-  <div id="debugModal" onclick="if(event.target.id==='debugModal')hideDebugModal()" 
-       class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div class="bg-zinc-900 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-auto">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">🔧 Full Debug Information</h2>
-        <button onclick="hideDebugModal()" class="text-zinc-400 hover:text-white text-xl">✕</button>
-      </div>
-      <div id="debugContent" class="space-y-8 text-sm"></div>
-    </div>
-  </div>
+  .no-odds-note {
+    color: #888;
+    font-style: italic;
+    font-size: 0.9em;
+  }
+  .row-error {
+    color: var(--red);
+    font-size: 0.85em;
+    margin-top: 6px;
+    min-height: 1.1em;
+  }
 
-  <!-- Team breakdown modal (now shows ALL golfers) -->
-  <div id="modal" onclick="if(event.target.id==='modal')closeModal()" 
-       class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-    <div id="modalContent" class="bg-zinc-900 rounded-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-auto"></div>
-  </div>
+  .taken-info {
+    font-size: 0.95em;
+  }
+  .taken-info .team { font-weight: 600; }
+  .taken-info .odds { color: #555; font-size: 0.85em; margin-top: 2px; }
 
-  <script>
-    const entrants = [
-      {name: "Tyler Happ", golfers: ["Scottie Scheffler","Xander Schauffele","Justin Rose","Rickie Fowler","Sam Burns","Brooks Koepka","Alex Fitzpatrick","Max Homa"]},
-      {name: "Charles Vinsonhaler", golfers: ["Scottie Scheffler","Tyrrell Hatton","Jacob Bridgeman","Keegan Bradley","Rickie Fowler","Jason Day","Bud Cauley"]},
-      {name: "Chad Tart", golfers: ["Scottie Scheffler","Xander Schauffele","Ludvig Åberg","Tommy Fleetwood","Sam Stevens","Alex Fitzpatrick"]},
-      {name: "Tessa Johnson", golfers: ["Cameron Young","Ben Griffin","Akshay Bhatia","Patrick Reed","Adam Scott","Shane Lowry","Sungjae Im"]},
-      {name: "Bill Sessler", golfers: ["Xander Schauffele","Aaron Rai","Sam Burns","Adam Scott","Jason Day","Shane Lowry","Rickie Fowler","Jordan Spieth","Brooks Koepka","Brandt Snedeker"]},
-      {name: "Logan Robbins", golfers: ["Scottie Scheffler","Chris Gotterup","Ludvig Åberg","Patrick Reed","Brooks Koepka","Wyndham Clark","Alex Fitzpatrick","Sungjae Im"]},
-      {name: "Eric Oplinger", golfers: ["Scottie Scheffler","Ludvig Åberg","Patrick Cantlay","Nicolai Højgaard","Rickie Fowler","Sungjae Im","Brooks Koepka","Wyndham Clark"]},
-      {name: "Tim Johnson", golfers: ["Scottie Scheffler","Tommy Fleetwood","Shane Lowry","Jordan Spieth","Gary Woodland","Rickie Fowler","Brooks Koepka","Max Homa","Wyndham Clark"]},
-      {name: "Jon Sousa", golfers: ["Scottie Scheffler","Jon Rahm","Rickie Fowler","Sam Burns","Adam Scott","Brooks Koepka","Alex Smalley","Alex Fitzpatrick","Keith Mitchell","Sahith Theegala"]},
-      {name: "Kevin Mulhern", golfers: ["Scottie Scheffler","Justin Rose","JJ Spaun","Patrick Cantlay","Sam Burns","Shane Lowry"]},
-      {name: "Trey Anderson", golfers: ["Cameron Young","Ludvig Åberg","Nicolai Højgaard","Shane Lowry","Rickie Fowler","Gary Woodland","Alex Fitzpatrick","Brooks Koepka"]},
-      {name: "Hunter Bryson", golfers: ["Scottie Scheffler","JJ Spaun","Xander Schauffele","Ludvig Åberg","Hideki Matsuyama"]},
-      {name: "Ben Scerri", golfers: ["Cameron Young","Russell Henley","Tyrrell Hatton","Hideki Matsuyama","Rickie Fowler","Sam Burns"]},
-      {name: "Mike Sawaia", golfers: ["Scottie Scheffler","Xander Schauffele","Tommy Fleetwood","Jon Rahm","Hideki Matsuyama"]},
-      {name: "Emma Sawaia", golfers: ["Matt Fitzpatrick","Tommy Fleetwood","Jon Rahm","Tyrrell Hatton","Rickie Fowler","Wyndham Clark"]},
-      {name: "Mikey Goldberg", golfers: ["Scottie Scheffler","Tommy Fleetwood","Xander Schauffele","Ludvig Åberg","Rickie Fowler","Brooks Koepka"]},
-      {name: "Berk Olgun", golfers: ["Scottie Scheffler","Jordan Spieth","Sam Burns","Adam Scott","Rickie Fowler","Shane Lowry","Jason Day","Brooks Koepka","Sungjae Im","Wyndham Clark"]},
-      {name: "Max Hattman", golfers: ["Scottie Scheffler","Tommy Fleetwood","Ludvig Åberg","Patrick Reed","Sam Burns","Wyndham Clark","Brooks Koepka"]},
-      {name: "Sarah Anderson", golfers: ["Scottie Scheffler","Tommy Fleetwood","Ludvig Åberg","David Puig","Sam Stevens","Matt McCarty"]},
-      {name: "Greg Grattan", golfers: ["Rory McIlroy","Ludvig Åberg","Xander Schauffele","Sam Burns","Jordan Spieth","Alex Fitzpatrick","Sungjae Im","Brooks Koepka"]},
-      {name: "Livy Franklin", golfers: ["Scottie Scheffler","Jon Rahm","Shane Lowry","Corey Conners","Jordan Spieth","Sungjae Im","JT Poston","Alex Fitzpatrick","Lucas Glover","Christian Bezuidenhout"]},
-      {name: "John Morrison", golfers: ["Scottie Scheffler","Akshay Bhatia","Sam Burns","Shane Lowry","Joaquin Niemann","Corey Conners","Brooks Koepka","Sahith Theegala","Wyndham Clark","Max Homa"]},
-      {name: "Nick Rosshirt", golfers: ["Scottie Scheffler","Jon Rahm","Rickie Fowler","Sam Burns","Adam Scott","Alex Fitzpatrick","Sungjae Im","Brooks Koepka","Alex Smalley","Sudarshan Yellamaraju"]}
-    ];
+  .player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .team-group {
+    flex: 1 1 260px;
+    min-width: 220px;
+  }
+  .team-group-heading {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #444;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .team-group-list {
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .player-row:last-child { border-bottom: none; }
+  .player-row:hover { background: #f7f7f7; }
+  .player-row input { flex: 0 0 auto; }
+  .player-name { flex: 1 1 auto; }
+  .player-odds { color: #666; font-size: 0.85em; white-space: nowrap; }
 
-    let playersMap = new Map();
-    let lastRawData = null;
-    let fetchError = null;
+  .other-entries-section {
+    margin-top: 30px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .note-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 8px 0;
+    font-size: 0.9em;
+  }
+  .note-item .note-team { font-weight: 600; }
+  .note-item .note-time { color: #999; font-size: 0.8em; margin-left: 6px; }
 
-    async function fetchLiveData() {
-      const statusEl = document.getElementById("statusBar");
-      const updateEl = document.getElementById("lastUpdate");
-      statusEl.innerHTML = `<span class="text-yellow-400">🔄 Fetching from ESPN Scoreboard...</span>`;
-      updateEl.textContent = "Fetching...";
-      fetchError = null;
+  .footer-note {
+    margin-top: 30px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    color: #888;
+    font-size: 0.8em;
+    line-height: 1.5;
+  }
 
+  .load-error {
+    background: #fdecea;
+    color: var(--red);
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+  .banner-warn {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #8a6100;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+</style>
+
+<!-- Chart.js (classic script, must load before the module below runs) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Firebase (modular SDK) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+  import {
+    getFirestore, doc, collection, onSnapshot, serverTimestamp,
+    writeBatch, addDoc, query, orderBy,
+  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+  // ---- REPLACE with your Firebase project's web config ----
+  // (Firebase console -> Project settings -> Your apps -> SDK setup and config)
+  // This value is not a secret; it identifies the project. Access control is
+  // enforced entirely by the Firestore security rules (see README.md / firestore.rules),
+  // which make every write create-only: nobody, including via this same public
+  // config, can edit or delete a pick or note once it exists.
+  const firebaseConfig = {
+    apiKey: "REPLACE_ME",
+    authDomain: "REPLACE_ME.firebaseapp.com",
+    projectId: "REPLACE_ME",
+    storageBucket: "REPLACE_ME.appspot.com",
+    messagingSenderId: "REPLACE_ME",
+    appId: "REPLACE_ME"
+  };
+
+  // ---- Odds API key, used ONLY by the manual "Refresh odds" button below ----
+  // NOTE: unlike firebaseConfig, this key IS a bit of a secret -- The Odds API
+  // meters it (free tier: 500 calls/month) and there's no per-origin restriction
+  // on it. Putting it here means anyone who views this page's source can see it
+  // and could burn your quota. The daily automatic refresh (GitHub Action) keeps
+  // its own copy of this key as a private repo secret and never exposes it; this
+  // client-side copy is a separate, smaller-blast-radius key you can rotate at
+  // the-odds-api.com any time without touching the Action. The time-window +
+  // cooldown below are a courtesy limit for your own league, not real security --
+  // they only stop accidental over-clicking, not someone who copies the key out
+  // of "view source" on purpose.
+  const ODDS_API_KEY_CLIENT = "ac55b9ba5824da9150d8b0bdba34ad7d";
+
+  const usingLocalTestMode = firebaseConfig.projectId === "REPLACE_ME";
+
+  function slugify(s) {
+    return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "team";
+  }
+
+  // ---------------------------------------------------------------------
+  // Storage backends: Firestore in production, a localStorage-backed mock
+  // (same interface) while firebaseConfig is still unfilled, so the full
+  // interaction -- including the two locks below -- can be tested without
+  // a real Firebase project.
+  // ---------------------------------------------------------------------
+
+  function makeFirestoreStore() {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    return {
+      async createPick(weekId, matchupId, teamSlug, data) {
+        const batch = writeBatch(db);
+        batch.set(doc(db, "picks", weekId, "entries", matchupId), { ...data, timestamp: serverTimestamp() });
+        batch.set(doc(db, "picks", weekId, "teamLocks", teamSlug), {
+          fantasyTeam: data.fantasyTeam, matchupId, player: data.player, timestamp: serverTimestamp(),
+        });
+        await batch.commit();
+      },
+      subscribeEntries(weekId, cb) {
+        return onSnapshot(collection(db, "picks", weekId, "entries"), (snap) => {
+          const picks = {};
+          snap.forEach((d) => { picks[d.id] = d.data(); });
+          cb(picks);
+        }, (err) => { console.error(err); showError("Couldn't connect to the picks database (Firestore)."); });
+      },
+      subscribeTeamLocks(weekId, cb) {
+        return onSnapshot(collection(db, "picks", weekId, "teamLocks"), (snap) => {
+          const locks = {};
+          snap.forEach((d) => { locks[d.id] = d.data(); });
+          cb(locks);
+        }, (err) => console.error(err));
+      },
+      async addNote(weekId, note) {
+        await addDoc(collection(db, "otherEntries", weekId, "notes"), { ...note, timestamp: serverTimestamp() });
+      },
+      subscribeNotes(weekId, cb) {
+        const q = query(collection(db, "otherEntries", weekId, "notes"), orderBy("timestamp", "desc"));
+        return onSnapshot(q, (snap) => {
+          cb(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        }, (err) => console.error(err));
+      },
+    };
+  }
+
+  function makeLocalTestStore() {
+    const entriesKey = (w) => `td-parlay-local-entries:${w}`;
+    const locksKey = (w) => `td-parlay-local-locks:${w}`;
+    const notesKey = (w) => `td-parlay-local-notes:${w}`;
+    const readObj = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
+    const readArr = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+    const fire = () => window.dispatchEvent(new CustomEvent("td-parlay-local-change"));
+    const listen = (handler) => {
+      handler();
+      window.addEventListener("td-parlay-local-change", handler);
+      window.addEventListener("storage", handler); // syncs across tabs/windows
+      return () => {
+        window.removeEventListener("td-parlay-local-change", handler);
+        window.removeEventListener("storage", handler);
+      };
+    };
+    return {
+      async createPick(weekId, matchupId, teamSlug, data) {
+        const entries = readObj(entriesKey(weekId));
+        const locks = readObj(locksKey(weekId));
+        if (entries[matchupId]) throw new Error("Matchup already taken (local test mode).");
+        if (locks[teamSlug]) throw new Error("This fantasy team already has a pick this week (local test mode).");
+        const ts = new Date().toISOString();
+        entries[matchupId] = { ...data, timestamp: ts };
+        locks[teamSlug] = { fantasyTeam: data.fantasyTeam, matchupId, player: data.player, timestamp: ts };
+        localStorage.setItem(entriesKey(weekId), JSON.stringify(entries));
+        localStorage.setItem(locksKey(weekId), JSON.stringify(locks));
+        fire();
+      },
+      subscribeEntries: (weekId, cb) => listen(() => cb(readObj(entriesKey(weekId)))),
+      subscribeTeamLocks: (weekId, cb) => listen(() => cb(readObj(locksKey(weekId)))),
+      async addNote(weekId, note) {
+        const notes = readArr(notesKey(weekId));
+        notes.unshift({ ...note, timestamp: new Date().toISOString() });
+        localStorage.setItem(notesKey(weekId), JSON.stringify(notes));
+        fire();
+      },
+      subscribeNotes: (weekId, cb) => listen(() => cb(readArr(notesKey(weekId)))),
+    };
+  }
+
+  const store = usingLocalTestMode ? makeLocalTestStore() : makeFirestoreStore();
+
+  const ESPN_LEAGUE_URL =
+    "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/2026/segments/0/leagues/96984283?view=mTeam";
+  const ESPN_ROSTER_URL = (id) => `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${id}/roster`;
+  // ESPN's team-list endpoint (used to look up these ids) doesn't send CORS headers, so it
+  // can't be fetched from the browser -- only the per-team roster endpoint below does. Team
+  // ids are stable/well-known, so they're hardcoded here instead (used only client-side, by
+  // the manual refresh button; the server-side script looks these up dynamically since it
+  // has no CORS restriction).
+  const ESPN_TEAM_IDS = {
+    "Arizona Cardinals": 22, "Atlanta Falcons": 1, "Baltimore Ravens": 33, "Buffalo Bills": 2,
+    "Carolina Panthers": 29, "Chicago Bears": 3, "Cincinnati Bengals": 4, "Cleveland Browns": 5,
+    "Dallas Cowboys": 6, "Denver Broncos": 7, "Detroit Lions": 8, "Green Bay Packers": 9,
+    "Houston Texans": 34, "Indianapolis Colts": 11, "Jacksonville Jaguars": 30, "Kansas City Chiefs": 12,
+    "Las Vegas Raiders": 13, "Los Angeles Chargers": 24, "Los Angeles Rams": 14, "Miami Dolphins": 15,
+    "Minnesota Vikings": 16, "New England Patriots": 17, "New Orleans Saints": 18, "New York Giants": 19,
+    "New York Jets": 20, "Philadelphia Eagles": 21, "Pittsburgh Steelers": 23, "San Francisco 49ers": 25,
+    "Seattle Seahawks": 26, "Tampa Bay Buccaneers": 27, "Tennessee Titans": 10, "Washington Commanders": 28,
+  };
+  const ODDS_BASE = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl";
+  const BOOKMAKERS = ["draftkings", "fanduel"];
+
+  const state = {
+    odds: null,
+    fantasyTeams: [],
+    entries: {},   // matchupId -> pick data
+    teamLocks: {}, // teamSlug -> lock data
+    notes: [],
+    expanded: new Set(), // matchupIds whose player list is currently open
+  };
+
+  const els = {
+    oddsMeta: document.getElementById("odds-meta"),
+    matchups: document.getElementById("matchups"),
+    loadError: document.getElementById("load-error"),
+    refreshBtn: document.getElementById("refresh-btn"),
+    refreshStatus: document.getElementById("refresh-status"),
+    noteTeam: document.getElementById("note-team"),
+    noteText: document.getElementById("note-text"),
+    noteSubmit: document.getElementById("note-submit"),
+    noteError: document.getElementById("note-error"),
+    notesList: document.getElementById("notes-list"),
+  };
+
+  const BOOK_ABBREV = { draftkings: "DK", fanduel: "FD", betmgm: "MGM", caesars: "CZR" };
+  function bookAbbrev(key) {
+    return BOOK_ABBREV[key] || key.slice(0, 3).toUpperCase();
+  }
+
+  function americanOddsLabel(price) {
+    if (price === undefined || price === null) return "—";
+    return price > 0 ? `+${price}` : `${price}`;
+  }
+
+  function fmtKickoff(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      weekday: "short", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  function showError(msg) {
+    els.loadError.textContent = msg;
+    els.loadError.style.display = "block";
+  }
+
+  // ---------------------------------------------------------------------
+  // Fantasy teams (live from ESPN)
+  // ---------------------------------------------------------------------
+
+  async function loadFantasyTeams() {
+    try {
+      const res = await fetch(ESPN_LEAGUE_URL);
+      if (!res.ok) throw new Error(`ESPN league fetch failed: ${res.status}`);
+      const data = await res.json();
+      const teams = (data.teams || [])
+        .map((t) => (t.name || `${t.location} ${t.nickname}`).trim())
+        .sort((a, b) => a.localeCompare(b));
+      state.fantasyTeams = teams;
+    } catch (err) {
+      console.error(err);
+      state.fantasyTeams = [];
+      showError("Couldn't load fantasy team names live from ESPN right now. Try reloading.");
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Odds: initial load from odds.json, plus a rate-limited manual refresh
+  // that hits The Odds API + ESPN rosters directly from the browser.
+  // ---------------------------------------------------------------------
+
+  async function loadOdds() {
+    const res = await fetch(`odds.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`odds.json fetch failed: ${res.status}`);
+    state.odds = await res.json();
+  }
+
+  const ET_PARTS_FMT = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York", weekday: "short", hour: "numeric", hour12: false,
+  });
+  const ET_DATE_KEY_FMT = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
+
+  function etParts(date = new Date()) {
+    const parts = Object.fromEntries(ET_PARTS_FMT.formatToParts(date).map((p) => [p.type, p.value]));
+    return { weekday: parts.weekday, hour: parseInt(parts.hour, 10) };
+  }
+  function etDateKey(date = new Date()) {
+    return ET_DATE_KEY_FMT.format(date);
+  }
+
+  const REFRESH_MAX_PER_DAY = 3;
+  const REFRESH_COOLDOWN_HOURS = 3;
+  const REFRESH_META_KEY = "td-parlay-refresh-meta";
+
+  function isWithinRefreshWindow(date = new Date()) {
+    const { weekday, hour } = etParts(date);
+    if (["Wed", "Thu", "Fri", "Sat"].includes(weekday)) return true;
+    if (weekday === "Sun" && hour < 13) return true;
+    return false;
+  }
+
+  function readRefreshMeta() {
+    try { return JSON.parse(localStorage.getItem(REFRESH_META_KEY) || "null") || { dateKey: null, count: 0, lastAt: 0 }; }
+    catch { return { dateKey: null, count: 0, lastAt: 0 }; }
+  }
+
+  function refreshStatus() {
+    let meta = readRefreshMeta();
+    const todayKey = etDateKey();
+    if (meta.dateKey !== todayKey) meta = { dateKey: todayKey, count: 0, lastAt: meta.lastAt || 0 };
+
+    if (!isWithinRefreshWindow()) {
+      return { allowed: false, reason: "Odds refresh is only available Wed–Sun 1pm ET.", meta };
+    }
+    if (meta.count >= REFRESH_MAX_PER_DAY) {
+      return { allowed: false, reason: `Already refreshed ${REFRESH_MAX_PER_DAY}x today — try again tomorrow.`, meta };
+    }
+    const hoursSince = meta.lastAt ? (Date.now() - meta.lastAt) / 3.6e6 : Infinity;
+    if (hoursSince < REFRESH_COOLDOWN_HOURS) {
+      const mins = Math.max(1, Math.ceil((REFRESH_COOLDOWN_HOURS - hoursSince) * 60));
+      return { allowed: false, reason: `Cooldown active — try again in ~${mins} min.`, meta };
+    }
+    return { allowed: true, reason: `${REFRESH_MAX_PER_DAY - meta.count} refresh(es) left today.`, meta };
+  }
+
+  function recordRefresh(meta) {
+    const todayKey = etDateKey();
+    const count = (meta.dateKey === todayKey ? meta.count : 0) + 1;
+    localStorage.setItem(REFRESH_META_KEY, JSON.stringify({ dateKey: todayKey, count, lastAt: Date.now() }));
+  }
+
+  function updateRefreshButtonUI() {
+    const status = refreshStatus();
+    els.refreshBtn.disabled = !status.allowed;
+    els.refreshStatus.textContent = status.reason;
+  }
+
+  const ET_WEEKDAY_FMT = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" });
+  function isThursdayGame(iso) {
+    return ET_WEEKDAY_FMT.format(new Date(iso)) === "Thu";
+  }
+
+  function normalizeName(name) {
+    return name.normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().replace(/[.']/g, "")
+      .replace(/\s+(jr|sr|ii|iii|iv|v)\.?$/, "")
+      .replace(/[^a-z\s-]/g, "").trim();
+  }
+
+  function mondayOf(dateStr) {
+    const d = new Date(dateStr);
+    const day = d.getUTCDay();
+    d.setUTCDate(d.getUTCDate() + ((day === 0 ? -6 : 1) - day));
+    return d.toISOString().slice(0, 10);
+  }
+
+  async function buildPlayerTeamMap(teamNames) {
+    const map = new Map();
+    for (const teamName of teamNames) {
+      const id = ESPN_TEAM_IDS[teamName];
+      if (!id) {
+        console.warn(`No known ESPN team id for "${teamName}"; its players will be untagged.`);
+        continue;
+      }
       try {
-        const url = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?event=401811947&t=${Date.now()}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+        const res = await fetch(ESPN_ROSTER_URL(id));
+        if (!res.ok) continue;
         const data = await res.json();
-        lastRawData = data;
-
-        playersMap.clear();
-
-        const competitors = data.events?.[0]?.competitions?.[0]?.competitors || [];
-
-        competitors.forEach(c => {
-          let name = c.athlete?.displayName?.trim();
-          if (!name) return;
-
-          // Name normalization
-          name = name.replace("J.J. Spaun", "JJ Spaun")
-                     .replace("J.T. Poston", "JT Poston")
-                     .replace("Joaquín Niemann", "Joaquin Niemann")
-                     .replace("Christiaan Bezuidenhout", "Christian Bezuidenhout");
-
-          // Score parsing
-          let toPar = 0;
-          if (c.score !== undefined) {
-            const scoreStr = String(c.score).trim();
-            toPar = parseFloat(scoreStr.replace('+', '').replace('−', '-')) || 0;
+        for (const group of data.athletes || []) {
+          for (const athlete of group.items || []) {
+            if (athlete.fullName) map.set(normalizeName(athlete.fullName), teamName);
           }
+        }
+      } catch (err) {
+        console.warn(`Roster fetch failed for ${teamName}`, err);
+      }
+    }
+    return map;
+  }
 
-          // Thru parsing (improved)
-          let thru = "—";
-          if (c.status?.type?.shortDetail) thru = c.status.type.shortDetail;
-          else if (c.thru) thru = c.thru;
-          else if (c.linescores?.[0]?.displayValue) thru = c.linescores[0].displayValue;
+  async function fetchLiveOdds() {
+    const eventsRes = await fetch(`${ODDS_BASE}/events?apiKey=${ODDS_API_KEY_CLIENT}`);
+    if (!eventsRes.ok) throw new Error(`events fetch failed: ${eventsRes.status}`);
+    const allEvents = await eventsRes.json();
 
-          playersMap.set(name, {
-            toPar: toPar,
-            thru: thru,
-            today: c.score || ""
+    const now = Date.now();
+    const windowEnd = now + 8 * 24 * 60 * 60 * 1000;
+    const weekEvents = allEvents
+      .filter((e) => {
+        const t = new Date(e.commence_time).getTime();
+        return t >= now - 12 * 3600 * 1000 && t <= windowEnd && !isThursdayGame(e.commence_time);
+      })
+      .sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+
+    if (weekEvents.length === 0) {
+      return { updatedAt: new Date().toISOString(), weekId: state.odds?.weekId || null, bookmakers: BOOKMAKERS, games: [] };
+    }
+
+    const weekId = `week-of-${mondayOf(weekEvents[0].commence_time)}`;
+    const teamNames = new Set();
+    weekEvents.forEach((e) => { teamNames.add(e.home_team); teamNames.add(e.away_team); });
+    const playerTeamMap = await buildPlayerTeamMap(teamNames);
+
+    const games = [];
+    for (const ev of weekEvents) {
+      const url = `${ODDS_BASE}/events/${ev.id}/odds?apiKey=${ODDS_API_KEY_CLIENT}&regions=us` +
+        `&markets=player_anytime_td&oddsFormat=american&bookmakers=${BOOKMAKERS.join(",")}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const playersByName = new Map();
+      for (const bk of data.bookmakers || []) {
+        const market = bk.markets?.find((m) => m.key === "player_anytime_td");
+        if (!market) continue;
+        for (const outcome of market.outcomes || []) {
+          const player = outcome.description || outcome.name;
+          if (!player || /\bd\/st\b|\bdefense\b/i.test(player)) continue;
+          if (!playersByName.has(player)) playersByName.set(player, {});
+          playersByName.get(player)[bk.key] = outcome.price;
+        }
+      }
+      const players = Array.from(playersByName.entries()).map(([name, odds]) => ({
+        name, team: playerTeamMap.get(normalizeName(name)) || null, odds,
+      }));
+      players.sort((a, b) => {
+        const rank = (p) => (p.team === ev.away_team ? 0 : p.team === ev.home_team ? 1 : 2);
+        return rank(a) - rank(b) || a.name.localeCompare(b.name);
+      });
+      games.push({ id: ev.id, home: ev.home_team, away: ev.away_team, commenceTime: ev.commence_time, players });
+    }
+
+    return { updatedAt: new Date().toISOString(), weekId, bookmakers: BOOKMAKERS, games };
+  }
+
+  async function handleRefreshClick() {
+    const status = refreshStatus();
+    if (!status.allowed) return;
+    els.refreshBtn.disabled = true;
+    els.refreshStatus.textContent = "Refreshing… (this can take ~10 seconds)";
+    try {
+      const fresh = await fetchLiveOdds();
+      state.odds = fresh;
+      recordRefresh(status.meta);
+      renderOddsMeta();
+      renderMatchups();
+    } catch (err) {
+      console.error(err);
+      els.refreshStatus.textContent = "Refresh failed — see console for details.";
+    } finally {
+      updateRefreshButtonUI();
+    }
+  }
+
+  function renderOddsMeta() {
+    const { updatedAt, weekId } = state.odds || {};
+    if (!updatedAt) {
+      els.oddsMeta.textContent =
+        "No odds data yet — the daily update hasn't run for this week. Check back soon, or use Refresh odds above.";
+      els.oddsMeta.classList.add("stale");
+      return;
+    }
+    const updated = new Date(updatedAt);
+    const ageHours = (Date.now() - updated.getTime()) / 3.6e6;
+    els.oddsMeta.textContent =
+      `Odds (${(state.odds.bookmakers || []).join(" / ").toUpperCase()}) last refreshed ${updated.toLocaleString()} · week: ${weekId}`;
+    els.oddsMeta.classList.toggle("stale", ageHours > 30);
+  }
+
+  // ---------------------------------------------------------------------
+  // Matchups + picks
+  // ---------------------------------------------------------------------
+
+  function buildPlayerListEl(game, matchupId) {
+    const container = document.createElement("div");
+    container.className = "player-list";
+
+    const groups = new Map([[game.away, []], [game.home, []]]);
+    const other = [];
+    for (const p of game.players) {
+      if (p.team && groups.has(p.team)) groups.get(p.team).push(p);
+      else other.push(p);
+    }
+    if (other.length) groups.set("Other / unmatched", other);
+
+    const radioName = `player-${matchupId}`;
+    for (const [teamName, players] of groups.entries()) {
+      if (players.length === 0) continue;
+      const groupEl = document.createElement("div");
+      groupEl.className = "team-group";
+      const heading = document.createElement("div");
+      heading.className = "team-group-heading";
+      heading.textContent = teamName;
+      groupEl.appendChild(heading);
+
+      const list = document.createElement("div");
+      list.className = "team-group-list";
+      for (const p of players) {
+        const rowId = `${radioName}-${slugify(p.name)}`;
+        const oddsBits = state.odds.bookmakers.map((b) => `${bookAbbrev(b)} ${americanOddsLabel(p.odds[b])}`).join(" / ");
+        const row = document.createElement("label");
+        row.className = "player-row";
+        row.htmlFor = rowId;
+        row.innerHTML =
+          `<input type="radio" name="${radioName}" id="${rowId}" value="${escapeHtml(p.name)}">` +
+          `<span class="player-name">${escapeHtml(p.name)}</span>` +
+          `<span class="player-odds">${oddsBits}</span>`;
+        list.appendChild(row);
+      }
+      groupEl.appendChild(list);
+      container.appendChild(groupEl);
+    }
+    return container;
+  }
+
+  function renderMatchups() {
+    els.matchups.innerHTML = "";
+    const games = (state.odds && state.odds.games) || [];
+    if (games.length === 0) return;
+
+    const pickedTeamNames = new Set(Object.values(state.teamLocks).map((l) => l.fantasyTeam));
+
+    for (const game of games) {
+      const pick = state.entries[game.id];
+      const card = document.createElement("div");
+      card.className = "matchup-card" + (pick ? " taken" : "");
+
+      const title = document.createElement("div");
+      title.className = "matchup-title";
+      title.textContent = `${game.away} @ ${game.home}`;
+      card.appendChild(title);
+
+      const kickoff = document.createElement("div");
+      kickoff.className = "kickoff";
+      kickoff.textContent = fmtKickoff(game.commenceTime);
+      card.appendChild(kickoff);
+
+      if (pick) {
+        const info = document.createElement("div");
+        info.className = "taken-info";
+        const oddsBits = state.odds.bookmakers
+          .map((b) => `${bookAbbrev(b)} ${americanOddsLabel(pick.oddsSnapshot?.[b])}`)
+          .join(" / ");
+        info.innerHTML =
+          `<span class="team">${escapeHtml(pick.fantasyTeam)}</span> took <strong>${escapeHtml(pick.player)}</strong>` +
+          `<div class="odds">Locked in at: ${oddsBits}</div>`;
+        card.appendChild(info);
+        els.matchups.appendChild(card);
+        continue;
+      }
+
+      if (!game.players || game.players.length === 0) {
+        const note = document.createElement("div");
+        note.className = "no-odds-note";
+        note.textContent = "TD odds not posted yet for this game — check back closer to kickoff.";
+        card.appendChild(note);
+        els.matchups.appendChild(card);
+        continue;
+      }
+
+      const details = document.createElement("details");
+      details.className = "pick-details";
+      details.open = state.expanded.has(game.id);
+      details.addEventListener("toggle", () => {
+        if (details.open) state.expanded.add(game.id);
+        else state.expanded.delete(game.id);
+      });
+
+      const summary = document.createElement("summary");
+      summary.className = "pick-summary";
+      summary.innerHTML = `<span>Make a pick</span><span class="chevron">▾</span>`;
+      details.appendChild(summary);
+
+      const pickArea = document.createElement("div");
+      pickArea.className = "pick-area";
+
+      const row = document.createElement("div");
+      row.className = "pick-row";
+
+      const teamSelect = document.createElement("select");
+      teamSelect.innerHTML = `<option value="">Fantasy team…</option>` +
+        state.fantasyTeams.map((t) => {
+          const already = pickedTeamNames.has(t);
+          return `<option value="${escapeHtml(t)}" ${already ? "disabled" : ""}>${escapeHtml(t)}${already ? " (already picked)" : ""}</option>`;
+        }).join("");
+      row.appendChild(teamSelect);
+
+      const btn = document.createElement("button");
+      btn.className = "submit-btn";
+      btn.textContent = "Lock in pick";
+      row.appendChild(btn);
+      pickArea.appendChild(row);
+
+      const playerListEl = buildPlayerListEl(game, game.id);
+      pickArea.appendChild(playerListEl);
+
+      const errEl = document.createElement("div");
+      errEl.className = "row-error";
+      pickArea.appendChild(errEl);
+
+      details.appendChild(pickArea);
+      card.appendChild(details);
+
+      btn.addEventListener("click", async () => {
+        errEl.textContent = "";
+        const fantasyTeam = teamSelect.value;
+        const selectedInput = playerListEl.querySelector(`input[name="player-${game.id}"]:checked`);
+        const playerName = selectedInput ? selectedInput.value : "";
+        if (!fantasyTeam || !playerName) {
+          errEl.textContent = "Pick a fantasy team and a player first.";
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Locking in…";
+        try {
+          const playerData = game.players.find((p) => p.name === playerName);
+          await store.createPick(state.odds.weekId, game.id, slugify(fantasyTeam), {
+            fantasyTeam,
+            player: playerName,
+            matchup: `${game.away} @ ${game.home}`,
+            oddsSnapshot: playerData ? playerData.odds : {},
           });
-        });
+          // subscribeEntries()/subscribeTeamLocks() listeners will re-render this as taken.
+        } catch (err) {
+          console.error(err);
+          btn.disabled = false;
+          btn.textContent = "Lock in pick";
+          errEl.textContent =
+            "Someone may have just grabbed this matchup, or your team already has a pick this week. Refresh and try again.";
+        }
+      });
 
-        statusEl.innerHTML = `<span class="text-green-400">✅ Loaded ${playersMap.size} players from ESPN</span>`;
-        updateEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-        renderAll();
-      } catch(e) {
-        fetchError = e.message;
-        statusEl.innerHTML = `<span class="text-red-400">❌ ${e.message}</span>`;
-        updateEl.textContent = "Failed – see Debug";
-        console.error(e);
+      els.matchups.appendChild(card);
+    }
+  }
+
+  function subscribeToPicks(weekId) {
+    store.subscribeEntries(weekId, (entries) => { state.entries = entries; renderMatchups(); });
+    store.subscribeTeamLocks(weekId, (locks) => { state.teamLocks = locks; renderMatchups(); });
+  }
+
+  // ---------------------------------------------------------------------
+  // Other entries (unrestricted notes board)
+  // ---------------------------------------------------------------------
+
+  function renderNoteTeamOptions() {
+    els.noteTeam.innerHTML = `<option value="">Fantasy team…</option>` +
+      state.fantasyTeams.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+  }
+
+  function noteTimestampToDate(ts) {
+    if (!ts) return null;
+    if (typeof ts.toDate === "function") return ts.toDate();
+    return new Date(ts);
+  }
+
+  function renderNotes() {
+    els.notesList.innerHTML = "";
+    for (const n of state.notes) {
+      const d = noteTimestampToDate(n.timestamp);
+      const item = document.createElement("div");
+      item.className = "note-item";
+      item.innerHTML =
+        `<span class="note-team">${escapeHtml(n.fantasyTeam)}:</span> ${escapeHtml(n.note)}` +
+        `<span class="note-time">${d ? d.toLocaleString() : ""}</span>`;
+      els.notesList.appendChild(item);
+    }
+  }
+
+  function subscribeToNotes(weekId) {
+    store.subscribeNotes(weekId, (notes) => { state.notes = notes; renderNotes(); });
+  }
+
+  function wireNoteForm() {
+    els.noteSubmit.addEventListener("click", async () => {
+      els.noteError.textContent = "";
+      const fantasyTeam = els.noteTeam.value;
+      const note = els.noteText.value.trim();
+      if (!fantasyTeam || !note) {
+        els.noteError.textContent = "Pick a team and type something first.";
+        return;
       }
-    }
-
-    function getTeamScore(entry) {
-      let matched = 0;
-      let scores = entry.golfers.map(g => {
-        const p = playersMap.get(g);
-        if (p) matched++;
-        return {name: g, toPar: p ? p.toPar : 999, thru: p ? p.thru : "—"};
-      }).sort((a,b) => a.toPar - b.toPar);
-
-      const best4 = scores.slice(0,4);
-      const avg = (best4.reduce((sum, s) => sum + s.toPar, 0) / 4).toFixed(1);
-      return {avg: parseFloat(avg), best4, allScores: scores, matchedCount: matched};
-    }
-
-    function calculateWinProbabilities() {
-      const simLoading = document.getElementById("simLoading");
-      simLoading.classList.remove("hidden");
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const sims = 5000;
-          const winCounts = new Array(entrants.length).fill(0);
-          for (let i = 0; i < sims; i++) {
-            let teamAvgs = entrants.map((entry, idx) => {
-              let projected = entry.golfers.map(g => {
-                const current = playersMap.get(g) || {toPar: 0};
-                return current.toPar + (Math.random() - 0.5) * 12;
-              });
-              projected.sort((a,b) => a - b);
-              return {idx, avg: (projected[0]+projected[1]+projected[2]+projected[3])/4};
-            });
-            teamAvgs.sort((a,b) => a.avg - b.avg);
-            winCounts[teamAvgs[0].idx]++;
-          }
-          simLoading.classList.add("hidden");
-          resolve(entrants.map((_, i) => Math.round((winCounts[i] / sims) * 100)));
-        }, 10);
-      });
-    }
-
-    async function renderTeams() {
-      const probs = await calculateWinProbabilities();
-      const tbody = document.getElementById("teamsBody");
-      tbody.innerHTML = "";
-
-      const teamsWithData = entrants.map((entry, i) => {
-        const team = getTeamScore(entry);
-        return { ...entry, teamAvg: team.avg, best4: team.best4, allScores: team.allScores, prob: probs[i] };
-      }).sort((a,b) => a.teamAvg - b.teamAvg);
-
-      teamsWithData.forEach((team, index) => {
-        const best4Str = team.best4.map(p => `${p.name} (${p.toPar > 0 ? '+' : ''}${p.toPar})`).join(", ");
-        const row = document.createElement("tr");
-        row.className = "team-row cursor-pointer border-b border-zinc-800 hover:bg-zinc-900";
-        row.innerHTML = `
-          <td class="py-4 px-4 font-mono">${index+1}</td>
-          <td class="py-4 px-4">
-            <div class="font-medium">${team.name}</div>
-            <div class="best4 text-xs">Best 4: ${best4Str}</div>
-          </td>
-          <td class="py-4 px-4 text-center font-mono text-xl ${team.teamAvg < 0 ? 'positive' : team.teamAvg > 0 ? 'negative' : ''}">${team.teamAvg}</td>
-          <td class="py-4 px-4 text-center font-bold text-emerald-400">${team.prob}%</td>
-          <td class="py-4 px-4"><i class="fas fa-chevron-down"></i></td>
-        `;
-        row.onclick = () => showTeamBreakdown(team);
-        tbody.appendChild(row);
-      });
-    }
-
-    function showTeamBreakdown(team) {
-      let html = `<h3 class="text-2xl font-bold mb-6">${team.name} — Team Avg <span class="${team.teamAvg < 0 ? 'positive' : 'negative'}">${team.teamAvg}</span></h3>`;
-      html += `<div class="space-y-4">`;
-      
-      team.allScores.forEach(p => {
-        const isBest4 = team.best4.some(b => b.name === p.name);
-        html += `
-          <div class="${isBest4 ? 'bg-emerald-900/30 border border-emerald-500' : 'bg-zinc-800'} p-5 rounded-xl flex justify-between items-center">
-            <div>
-              <div class="font-semibold">${p.name}</div>
-              <div class="text-sm text-zinc-400">Thru ${p.thru}</div>
-            </div>
-            <div class="text-4xl font-mono ${p.toPar < 0 ? 'positive' : p.toPar > 0 ? 'negative' : ''}">
-              ${p.toPar > 0 ? '+' : ''}${p.toPar}
-            </div>
-            ${isBest4 ? '<span class="text-xs bg-emerald-600 px-3 py-1 rounded-full">BEST 4</span>' : ''}
-          </div>`;
-      });
-      
-      html += `</div><button onclick="closeModal()" class="mt-8 w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-lg">Close</button>`;
-      document.getElementById("modalContent").innerHTML = html;
-      document.getElementById("modal").classList.remove("hidden");
-    }
-
-    function closeModal() {
-      document.getElementById("modal").classList.add("hidden");
-    }
-
-    function renderField() {
-      const tbody = document.getElementById("fieldBody");
-      tbody.innerHTML = "";
-      Array.from(playersMap.entries())
-        .sort((a,b) => a[1].toPar - b[1].toPar)
-        .forEach(([name, data]) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="py-3 px-4">${name}</td>
-            <td class="py-3 px-4 text-center font-mono text-lg ${data.toPar < 0 ? 'positive' : data.toPar > 0 ? 'negative' : ''}">${data.toPar > 0 ? '+' : ''}${data.toPar}</td>
-            <td class="py-3 px-4 text-center">${data.thru}</td>
-            <td class="py-3 px-4 text-center">${data.today}</td>
-          `;
-          tbody.appendChild(row);
-        });
-    }
-
-    async function renderAll() {
-      await renderTeams();
-      renderField();
-    }
-
-    function manualRefresh() { fetchLiveData(); }
-
-    function switchTab(n) {
-      document.querySelectorAll('.tab-button').forEach((b,i) => {
-        b.classList.toggle('border-blue-500', i===n);
-        b.classList.toggle('text-blue-400', i===n);
-        b.classList.toggle('text-zinc-400', i!==n);
-      });
-      document.getElementById("content0").classList.toggle("hidden", n!==0);
-      document.getElementById("content1").classList.toggle("hidden", n!==1);
-    }
-
-    function showDebugModal() {
-      const content = document.getElementById("debugContent");
-      let html = `<div><strong>Fetch Status:</strong> ${fetchError ? `<span class="text-red-400">FAILED – ${fetchError}</span>` : `<span class="text-green-400">SUCCESS</span>`}</div>`;
-      html += `<div><strong>Players loaded from ESPN:</strong> ${playersMap.size}</div>`;
-      html += `<div><strong>Last update:</strong> ${document.getElementById("lastUpdate").textContent}</div><hr>`;
-
-      html += `<div class="font-semibold">Pool Golfer Matching:</div>`;
-      entrants.forEach(entry => {
-        const team = getTeamScore(entry);
-        const percent = Math.round((team.matchedCount / entry.golfers.length) * 100);
-        html += `<div class="flex justify-between text-xs"><span>${entry.name}</span><span class="${percent===100?'text-green-400':'text-yellow-400'}">${team.matchedCount}/${entry.golfers.length} (${percent}%)</span></div>`;
-      });
-
-      html += `<hr><div class="font-semibold">All pool golfers (matched / not matched)</div>`;
-      const allPool = new Set();
-      entrants.forEach(e => e.golfers.forEach(g => allPool.add(g)));
-      html += `<div class="grid grid-cols-2 gap-1 text-xs max-h-64 overflow-auto border border-zinc-700 p-3 rounded-xl">`;
-      Array.from(allPool).sort().forEach(g => {
-        const found = playersMap.has(g);
-        html += `<div class="${found ? 'text-green-400' : 'text-red-400'}">${g} ${found ? '✅' : '❌'}</div>`;
-      });
-      html += `</div>`;
-
-      // Extra debug: sample thru values
-      if (lastRawData) {
-        html += `<hr><div class="font-semibold">Sample Thru values (first 5 players)</div>`;
-        const sample = (lastRawData.events?.[0]?.competitions?.[0]?.competitors || []).slice(0,5);
-        html += `<pre class="bg-black p-3 rounded-2xl overflow-auto text-[10px]">${JSON.stringify(sample.map(c => ({name: c.athlete?.displayName, thru: c.status?.type?.shortDetail || c.thru})), null, 2)}</pre>`;
+      els.noteSubmit.disabled = true;
+      try {
+        await store.addNote(state.odds.weekId, { fantasyTeam, note });
+        els.noteText.value = "";
+      } catch (err) {
+        console.error(err);
+        els.noteError.textContent = "Couldn't add that entry — try again.";
+      } finally {
+        els.noteSubmit.disabled = false;
       }
+    });
+  }
 
-      content.innerHTML = html;
-      document.getElementById("debugModal").classList.remove("hidden");
+  // ---------------------------------------------------------------------
+  // League holdings value (BTC + SPCX + cash). No database involved -- this
+  // reads portfolio.json, a file a scheduled Action refreshes every 30
+  // minutes from Yahoo Finance + CoinGecko (see scripts/fetch-portfolio.mjs).
+  // ---------------------------------------------------------------------
+
+  const HOLDINGS_COLORS = { btc: "#2a78d6", spcx: "#eb6834", total: "#1baf7a" };
+
+  function fmtUsd(n) {
+    return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+  }
+
+  function fmtChartDate(dateStr) {
+    const d = new Date(`${dateStr}T12:00:00Z`);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  async function loadHoldings() {
+    try {
+      const res = await fetch(`portfolio.json?t=${Date.now()}`);
+      if (!res.ok) throw new Error(`portfolio.json fetch failed: ${res.status}`);
+      const data = await res.json();
+      renderHoldings(data);
+    } catch (err) {
+      console.error(err);
+      const metaEl = document.getElementById("holdings-meta");
+      if (metaEl) metaEl.textContent = "Couldn't load league holdings value right now.";
+    }
+  }
+
+  function renderHoldings(data) {
+    const { current, series, updatedAt, holdings } = data;
+
+    document.getElementById("holdings-total").textContent = fmtUsd(current.total);
+    if (updatedAt) {
+      document.getElementById("holdings-meta").textContent = `Updated ${new Date(updatedAt).toLocaleString()}`;
     }
 
-    function hideDebugModal() {
-      document.getElementById("debugModal").classList.add("hidden");
-    }
+    document.getElementById("holdings-stats").innerHTML = `
+      <div class="stat-tile">
+        <div class="stat-label"><span class="stat-swatch" style="background:${HOLDINGS_COLORS.btc}"></span>BTC (${holdings.btcAmount.toFixed(8)})</div>
+        <div class="stat-value">${fmtUsd(current.btcValue)}</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label"><span class="stat-swatch" style="background:${HOLDINGS_COLORS.spcx}"></span>SPCX (${holdings.spcxShares} sh)</div>
+        <div class="stat-value">${fmtUsd(current.spcxValue)}</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Cash</div>
+        <div class="stat-value">${fmtUsd(current.cashValue)}</div>
+      </div>
+    `;
 
-    // Initial load
-    fetchLiveData();
-  </script>
+    if (!series || series.length === 0) return;
+
+    // The last row in `series` is the most recent fully-closed trading day --
+    // today's bar isn't final until market close. Append today's live totals
+    // as one more point so the chart visually reaches "now," matching the
+    // live headline number above it.
+    const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+    const chartSeries = series.at(-1)?.date === todayKey
+      ? series
+      : [...series, { date: todayKey, btcValue: current.btcValue, spcxValue: current.spcxValue, total: current.total }];
+
+    const ctx = document.getElementById("holdings-chart").getContext("2d");
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: chartSeries.map((s) => fmtChartDate(s.date)),
+        datasets: [
+          {
+            label: "BTC value", data: chartSeries.map((s) => s.btcValue),
+            borderColor: HOLDINGS_COLORS.btc, backgroundColor: "transparent",
+            borderWidth: 2, pointRadius: 3, tension: 0.15,
+          },
+          {
+            label: "SPCX value", data: chartSeries.map((s) => s.spcxValue),
+            borderColor: HOLDINGS_COLORS.spcx, backgroundColor: "transparent",
+            borderWidth: 2, pointRadius: 3, tension: 0.15,
+          },
+          {
+            label: "Total (incl. cash)", data: chartSeries.map((s) => s.total),
+            borderColor: HOLDINGS_COLORS.total, backgroundColor: "transparent",
+            borderWidth: 3, pointRadius: 3, tension: 0.15,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { position: "top", labels: { boxWidth: 12, usePointStyle: true } },
+          tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${fmtUsd(c.parsed.y)}` } },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { ticks: { callback: (v) => fmtUsd(v) }, grid: { color: "rgba(0,0,0,0.06)" } },
+        },
+      },
+    });
+  }
+
+  async function init() {
+    if (usingLocalTestMode) {
+      const banner = document.createElement("div");
+      banner.className = "banner-warn";
+      banner.textContent =
+        "Test mode: Firebase isn't configured yet, so picks and notes are stored only in this browser " +
+        "(localStorage), not shared with anyone else. Open this page in a second tab to see live " +
+        "syncing between two \"viewers.\" Once a real Firebase config is added to index.html, this " +
+        "banner disappears and everything becomes shared/permanent.";
+      document.body.insertBefore(banner, els.matchups);
+    }
+    els.refreshBtn.addEventListener("click", handleRefreshClick);
+    updateRefreshButtonUI();
+    setInterval(updateRefreshButtonUI, 60000);
+
+    wireNoteForm();
+    loadHoldings();
+
+    try {
+      await Promise.all([loadOdds(), loadFantasyTeams()]);
+    } catch (err) {
+      console.error(err);
+      showError("Couldn't load odds.json. If this is a brand-new deploy, wait for the first Action run or trigger it manually.");
+    }
+    renderOddsMeta();
+    renderMatchups();
+    renderNoteTeamOptions();
+    if (state.odds && state.odds.weekId) {
+      subscribeToPicks(state.odds.weekId);
+      subscribeToNotes(state.odds.weekId);
+    }
+  }
+
+  init();
+</script>
+</head>
+<body>
+  <div class="holdings-section">
+    <h2>League Holdings</h2>
+    <div id="holdings-meta" class="odds-meta">Loading holdings value…</div>
+    <div id="holdings-total" class="holdings-total">—</div>
+    <div id="holdings-stats" class="holdings-stats"></div>
+    <div class="chart-container">
+      <canvas id="holdings-chart"></canvas>
+    </div>
+  </div>
+
+  <h1>Weekly TD Parlay</h1>
+  <div class="subhead">12 legs, $10, first-anytime-TD-scorer per game. One pick per matchup, one pick per fantasy team — first come, first locked.</div>
+  <div id="odds-meta" class="odds-meta">Loading odds…</div>
+  <div class="refresh-bar">
+    <button id="refresh-btn" class="refresh-btn" disabled>Refresh odds</button>
+    <span id="refresh-status" class="refresh-status"></span>
+  </div>
+  <div id="load-error" class="load-error" style="display:none;"></div>
+
+  <div id="matchups"></div>
+
+  <div class="other-entries-section">
+    <h2>Other entries</h2>
+    <div class="subhead">Messed up a pick, or want to log something that isn't a TD parlay pick? Add a note here — any team can add as many as they want.</div>
+    <div class="pick-row">
+      <select id="note-team"><option value="">Fantasy team…</option></select>
+      <input type="text" id="note-text" placeholder="Type your entry…" maxlength="300">
+      <button id="note-submit" class="submit-btn">Add entry</button>
+    </div>
+    <div id="note-error" class="row-error"></div>
+    <div id="notes-list"></div>
+  </div>
+
+  <div class="footer-note">
+    Odds shown are anytime-TD-scorer prices from DraftKings and FanDuel, refreshed automatically once a day via a
+    scheduled job, plus an optional manual refresh (Wed–Sun 1pm ET, a few times a day) — not fetched once
+    when this page was built. They're for reference when choosing a player and are locked in at pick time; the
+    sportsbook's live line may move after that. Fantasy team names are pulled live from the league's ESPN page.
+    Picks, team locks, and other entries are all stored in a database that only allows new entries to be created —
+    nobody (including us) can edit or delete one once it's submitted, so the record can't be vandalized or quietly
+    changed.
+  </div>
 </body>
 </html>

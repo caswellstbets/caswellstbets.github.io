@@ -1,0 +1,36 @@
+name: Update TD Parlay Odds
+
+on:
+  schedule:
+    # Once a day, 13:00 UTC (9am ET / 8am CT). Keeps monthly usage of The
+    # Odds API's free tier (500 calls/mo) comfortably under budget -
+    # roughly 15 calls/day x 30 = ~450/mo. Use "Run workflow" below for
+    # extra on-demand refreshes without changing this schedule.
+    - cron: '0 13 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-odds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch latest odds
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: node scripts/fetch-odds.mjs
+
+      - name: Commit odds.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add odds.json
+          git diff --cached --quiet || git commit -m "Update TD parlay odds [skip ci]"
+          git push
