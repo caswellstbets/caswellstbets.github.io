@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-23T04:04:25.783Z",
+  "updatedAt": "2026-09-23T09:27:05.498Z",
   "holdings": {
     "spcxShares": 10.328119,
     "btcAmount": 0.01919374,
@@ -7,11 +7,11 @@
   },
   "current": {
     "spcxPrice": 154.72,
-    "btcPrice": 86659,
+    "btcPrice": 85965,
     "spcxValue": 1597.9665716799998,
-    "btcValue": 1663.3103146600001,
+    "btcValue": 1649.9898591,
     "cashValue": 9.82,
-    "total": 3271.09688634
+    "total": 3257.7764307800003
   },
   "series": [
     {
