@@ -396,7 +396,7 @@
         const batch = writeBatch(db);
         batch.set(doc(db, "picks", weekId, "entries", matchupId), { ...data, timestamp: serverTimestamp() });
         batch.set(doc(db, "picks", weekId, "teamLocks", teamSlug), {
-          fantasyTeam: data.fantasyTeam, matchupId, player: data.player, timestamp: serverTimestamp(),
+          fantasyTeam: data.fantasyTeam, matchupId, selection: data.selection, timestamp: serverTimestamp(),
         });
         await batch.commit();
       },
@@ -450,7 +450,7 @@
         if (locks[teamSlug]) throw new Error("This fantasy team already has a pick this week (local test mode).");
         const ts = new Date().toISOString();
         entries[matchupId] = { ...data, timestamp: ts };
-        locks[teamSlug] = { fantasyTeam: data.fantasyTeam, matchupId, player: data.player, timestamp: ts };
+        locks[teamSlug] = { fantasyTeam: data.fantasyTeam, matchupId, selection: data.selection, timestamp: ts };
         localStorage.setItem(entriesKey(weekId), JSON.stringify(entries));
         localStorage.setItem(locksKey(weekId), JSON.stringify(locks));
         fire();
