@@ -18,15 +18,21 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // A pick can be an anytime-TD-scorer pick ('td') or a game line
+    // ('spread' | 'moneyline' | 'total'). `selection` is the human-readable
+    // label (e.g. "Josh Allen" or "Buffalo Bills -5.5"); `details` carries
+    // the exact structured data (team/line/side/player) the results tracker
+    // grades against, so grading never has to re-parse `selection`'s text.
     match /picks/{weekId}/entries/{matchupId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['fantasyTeam', 'player', 'matchup', 'timestamp'])
+      allow create: if request.resource.data.keys().hasAll(['fantasyTeam', 'matchup', 'selection', 'pickType', 'timestamp'])
                     && request.resource.data.fantasyTeam is string
                     && request.resource.data.fantasyTeam.size() > 0
                     && request.resource.data.fantasyTeam.size() < 100
-                    && request.resource.data.player is string
-                    && request.resource.data.player.size() > 0
-                    && request.resource.data.player.size() < 100;
+                    && request.resource.data.selection is string
+                    && request.resource.data.selection.size() > 0
+                    && request.resource.data.selection.size() < 100
+                    && request.resource.data.pickType in ['td', 'spread', 'moneyline', 'total'];
       allow update, delete: if false;
     }
 

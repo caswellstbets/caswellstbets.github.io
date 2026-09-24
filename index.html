@@ -179,6 +179,19 @@
   }
   .taken-info .team { font-weight: 600; }
   .taken-info .odds { color: #555; font-size: 0.85em; margin-top: 2px; }
+  .pick-type-tag {
+    display: inline-block;
+    font-size: 0.7em;
+    font-weight: 600;
+    color: #555;
+    background: #eee;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .lines-group { margin-bottom: 14px; }
 
   .player-list {
     display: flex;
@@ -613,6 +626,55 @@
     return map;
   }
 
+  // Free, keyless game lines lookup (mirrors scripts/fetch-odds.mjs) so the
+  // manual refresh button keeps spread/moneyline/total in sync too.
+  async function fetchEspnEventsForDatesClient(dates) {
+    const events = [];
+    const seen = new Set();
+    for (const d of dates) {
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${d}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const e of data.events || []) {
+          if (seen.has(e.id)) continue;
+          seen.add(e.id);
+          const comp = e.competitions[0];
+          const home = comp.competitors.find((c) => c.homeAway === "home");
+          const away = comp.competitors.find((c) => c.homeAway === "away");
+          events.push({ id: e.id, home: home.team.displayName, away: away.team.displayName });
+        }
+      } catch (err) {
+        console.warn(`ESPN scoreboard fetch failed for ${d}`, err);
+      }
+    }
+    return events;
+  }
+
+  async function fetchGameLinesClient(espnEventId) {
+    try {
+      const res = await fetch(
+        `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${espnEventId}/competitions/${espnEventId}/odds?lang=en&region=us`
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const item = data.items?.[0];
+      if (!item) return null;
+      return {
+        provider: item.provider?.name || null,
+        spread: {
+          home: { line: item.spread ?? null, odds: item.homeTeamOdds?.spreadOdds ?? null },
+          away: { line: item.spread != null ? -item.spread : null, odds: item.awayTeamOdds?.spreadOdds ?? null },
+        },
+        moneyline: { home: item.homeTeamOdds?.moneyLine ?? null, away: item.awayTeamOdds?.moneyLine ?? null },
+        total: { points: item.overUnder ?? null, overOdds: item.overOdds ?? null, underOdds: item.underOdds ?? null },
+      };
+    } catch (err) {
+      console.warn(`ESPN core-odds fetch failed for event ${espnEventId}`, err);
+      return null;
+    }
+  }
+
   async function fetchLiveOdds() {
     const eventsRes = await fetch(`${ODDS_BASE}/events?apiKey=${ODDS_API_KEY_CLIENT}`);
     if (!eventsRes.ok) throw new Error(`events fetch failed: ${eventsRes.status}`);
@@ -635,6 +697,11 @@
     const teamNames = new Set();
     weekEvents.forEach((e) => { teamNames.add(e.home_team); teamNames.add(e.away_team); });
     const playerTeamMap = await buildPlayerTeamMap(teamNames);
+
+    const gameDates = new Set(weekEvents.map((e) => toYyyymmdd(new Date(e.commence_time))));
+    const espnEvents = await fetchEspnEventsForDatesClient(gameDates);
+    const findEspnEvent = (home, away) =>
+      espnEvents.find((e) => (e.home === home && e.away === away) || (e.home === away && e.away === home));
 
     const games = [];
     for (const ev of weekEvents) {
@@ -661,7 +728,9 @@
         const rank = (p) => (p.team === ev.away_team ? 0 : p.team === ev.home_team ? 1 : 2);
         return rank(a) - rank(b) || a.name.localeCompare(b.name);
       });
-      games.push({ id: ev.id, home: ev.home_team, away: ev.away_team, commenceTime: ev.commence_time, players });
+      const espnMatch = findEspnEvent(ev.home_team, ev.away_team);
+      const lines = espnMatch ? await fetchGameLinesClient(espnMatch.id) : null;
+      games.push({ id: ev.id, home: ev.home_team, away: ev.away_team, commenceTime: ev.commence_time, players, lines });
     }
 
     return { updatedAt: new Date().toISOString(), weekId, bookmakers: BOOKMAKERS, games };
@@ -705,9 +774,88 @@
   // Matchups + picks
   // ---------------------------------------------------------------------
 
-  function buildPlayerListEl(game, matchupId) {
+  // Given a game and a "type|key" selection, returns the display label, the
+  // odds to show/store, and structured `details` used later for grading in
+  // the results tracker (storing exact team/line/side rather than re-parsing
+  // it back out of a human-readable string).
+  function describePick(game, type, key) {
+    if (type === "td") {
+      const p = game.players.find((pl) => pl.name === key);
+      return { selection: key, odds: p ? p.odds : {}, details: { player: key } };
+    }
+    if (type === "spread") {
+      const side = game.lines.spread[key];
+      const team = key === "home" ? game.home : game.away;
+      const lineStr = side.line == null ? "" : side.line > 0 ? `+${side.line}` : `${side.line}`;
+      return {
+        selection: `${team} ${lineStr}`.trim(),
+        odds: { draftkings: side.odds },
+        details: { team, line: side.line },
+      };
+    }
+    if (type === "moneyline") {
+      const team = key === "home" ? game.home : game.away;
+      return { selection: `${team} ML`, odds: { draftkings: game.lines.moneyline[key] }, details: { team } };
+    }
+    if (type === "total") {
+      const label = key === "over" ? "Over" : "Under";
+      const odds = key === "over" ? game.lines.total.overOdds : game.lines.total.underOdds;
+      return {
+        selection: `${label} ${game.lines.total.points}`,
+        odds: { draftkings: odds },
+        details: { side: key, points: game.lines.total.points },
+      };
+    }
+    return { selection: key, odds: {}, details: {} };
+  }
+
+  function buildLinesGroupEl(game, matchupId) {
+    if (!game.lines) return null;
+    const radioName = `pick-${matchupId}`;
+    const options = [];
+    if (game.lines.spread?.home?.line != null) options.push(["spread", "away"], ["spread", "home"]);
+    if (game.lines.moneyline?.home != null) options.push(["moneyline", "away"], ["moneyline", "home"]);
+    if (game.lines.total?.points != null) options.push(["total", "over"], ["total", "under"]);
+    if (options.length === 0) return null;
+
     const container = document.createElement("div");
-    container.className = "player-list";
+    container.className = "lines-group";
+    const heading = document.createElement("div");
+    heading.className = "team-group-heading";
+    heading.textContent = "Game Lines";
+    container.appendChild(heading);
+
+    const list = document.createElement("div");
+    list.className = "team-group-list";
+    for (const [type, key] of options) {
+      const { selection, odds } = describePick(game, type, key);
+      const value = `${type}|${key}`;
+      const rowId = `${radioName}-${value}`;
+      const row = document.createElement("label");
+      row.className = "player-row";
+      row.htmlFor = rowId;
+      row.innerHTML =
+        `<input type="radio" name="${radioName}" id="${rowId}" value="${escapeHtml(value)}">` +
+        `<span class="player-name">${escapeHtml(selection)}</span>` +
+        `<span class="player-odds">${americanOddsLabel(odds.draftkings)}</span>`;
+      list.appendChild(row);
+    }
+    container.appendChild(list);
+    return container;
+  }
+
+  function buildTdGroupEl(game, matchupId) {
+    if (!game.players || game.players.length === 0) return null;
+    const radioName = `pick-${matchupId}`;
+
+    const wrapper = document.createElement("div");
+    const heading = document.createElement("div");
+    heading.className = "team-group-heading";
+    heading.textContent = "Anytime TD Scorer";
+    wrapper.appendChild(heading);
+
+    const playerList = document.createElement("div");
+    playerList.className = "player-list";
 
     const groups = new Map([[game.away, []], [game.home, []]]);
     const other = [];
@@ -717,33 +865,45 @@
     }
     if (other.length) groups.set("Other / unmatched", other);
 
-    const radioName = `player-${matchupId}`;
     for (const [teamName, players] of groups.entries()) {
       if (players.length === 0) continue;
       const groupEl = document.createElement("div");
       groupEl.className = "team-group";
-      const heading = document.createElement("div");
-      heading.className = "team-group-heading";
-      heading.textContent = teamName;
-      groupEl.appendChild(heading);
+      const subHeading = document.createElement("div");
+      subHeading.className = "team-group-heading";
+      subHeading.textContent = teamName;
+      groupEl.appendChild(subHeading);
 
       const list = document.createElement("div");
       list.className = "team-group-list";
       for (const p of players) {
-        const rowId = `${radioName}-${slugify(p.name)}`;
+        const value = `td|${p.name}`;
+        const rowId = `${radioName}-${slugify(value)}`;
         const oddsBits = state.odds.bookmakers.map((b) => `${bookAbbrev(b)} ${americanOddsLabel(p.odds[b])}`).join(" / ");
         const row = document.createElement("label");
         row.className = "player-row";
         row.htmlFor = rowId;
         row.innerHTML =
-          `<input type="radio" name="${radioName}" id="${rowId}" value="${escapeHtml(p.name)}">` +
+          `<input type="radio" name="${radioName}" id="${rowId}" value="${escapeHtml(value)}">` +
           `<span class="player-name">${escapeHtml(p.name)}</span>` +
           `<span class="player-odds">${oddsBits}</span>`;
         list.appendChild(row);
       }
       groupEl.appendChild(list);
-      container.appendChild(groupEl);
+      playerList.appendChild(groupEl);
     }
+    wrapper.appendChild(playerList);
+    return wrapper;
+  }
+
+  // Game Lines first, then Anytime TD Scorer below it -- one shared radio
+  // group per matchup, so only one selection (of either kind) can be made.
+  function buildPickOptionsEl(game, matchupId) {
+    const container = document.createElement("div");
+    const linesEl = buildLinesGroupEl(game, matchupId);
+    if (linesEl) container.appendChild(linesEl);
+    const tdEl = buildTdGroupEl(game, matchupId);
+    if (tdEl) container.appendChild(tdEl);
     return container;
   }
 
@@ -772,21 +932,29 @@
       if (pick) {
         const info = document.createElement("div");
         info.className = "taken-info";
-        const oddsBits = state.odds.bookmakers
-          .map((b) => `${bookAbbrev(b)} ${americanOddsLabel(pick.oddsSnapshot?.[b])}`)
-          .join(" / ");
+        const pickType = pick.pickType || "td";
+        const selectionLabel = pick.selection || pick.player || "?";
+        const oddsObj = pick.odds || pick.oddsSnapshot || {};
+        const oddsBits = Object.keys(oddsObj).length
+          ? Object.entries(oddsObj).map(([book, price]) => `${bookAbbrev(book)} ${americanOddsLabel(price)}`).join(" / ")
+          : "—";
+        const typeTag = { td: "TD", spread: "Spread", moneyline: "ML", total: "Total" }[pickType] || "";
         info.innerHTML =
-          `<span class="team">${escapeHtml(pick.fantasyTeam)}</span> took <strong>${escapeHtml(pick.player)}</strong>` +
+          `<span class="team">${escapeHtml(pick.fantasyTeam)}</span> took <strong>${escapeHtml(selectionLabel)}</strong>` +
+          (typeTag ? ` <span class="pick-type-tag">${typeTag}</span>` : "") +
           `<div class="odds">Locked in at: ${oddsBits}</div>`;
         card.appendChild(info);
         els.matchups.appendChild(card);
         continue;
       }
 
-      if (!game.players || game.players.length === 0) {
+      const hasLines = game.lines && (
+        game.lines.spread?.home?.line != null || game.lines.moneyline?.home != null || game.lines.total?.points != null
+      );
+      if (!hasLines && (!game.players || game.players.length === 0)) {
         const note = document.createElement("div");
         note.className = "no-odds-note";
-        note.textContent = "TD odds not posted yet for this game — check back closer to kickoff.";
+        note.textContent = "No odds posted yet for this game — check back closer to kickoff.";
         card.appendChild(note);
         els.matchups.appendChild(card);
         continue;
@@ -825,8 +993,8 @@
       row.appendChild(btn);
       pickArea.appendChild(row);
 
-      const playerListEl = buildPlayerListEl(game, game.id);
-      pickArea.appendChild(playerListEl);
+      const pickOptionsEl = buildPickOptionsEl(game, game.id);
+      pickArea.appendChild(pickOptionsEl);
 
       const errEl = document.createElement("div");
       errEl.className = "row-error";
@@ -838,21 +1006,23 @@
       btn.addEventListener("click", async () => {
         errEl.textContent = "";
         const fantasyTeam = teamSelect.value;
-        const selectedInput = playerListEl.querySelector(`input[name="player-${game.id}"]:checked`);
-        const playerName = selectedInput ? selectedInput.value : "";
-        if (!fantasyTeam || !playerName) {
-          errEl.textContent = "Pick a fantasy team and a player first.";
+        const selectedInput = pickOptionsEl.querySelector(`input[name="pick-${game.id}"]:checked`);
+        if (!fantasyTeam || !selectedInput) {
+          errEl.textContent = "Pick a fantasy team and a selection first.";
           return;
         }
+        const [type, key] = selectedInput.value.split("|");
+        const { selection, odds, details: pickDetails } = describePick(game, type, key);
         btn.disabled = true;
         btn.textContent = "Locking in…";
         try {
-          const playerData = game.players.find((p) => p.name === playerName);
           await store.createPick(state.odds.weekId, game.id, slugify(fantasyTeam), {
             fantasyTeam,
-            player: playerName,
+            pickType: type,
+            selection,
             matchup: `${game.away} @ ${game.home}`,
-            oddsSnapshot: playerData ? playerData.odds : {},
+            odds,
+            details: pickDetails,
           });
           // subscribeEntries()/subscribeTeamLocks() listeners will re-render this as taken.
         } catch (err) {
@@ -981,6 +1151,8 @@
             id: e.id,
             home: home.team.displayName,
             away: away.team.displayName,
+            homeScore: home.score != null ? parseInt(home.score, 10) : null,
+            awayScore: away.score != null ? parseInt(away.score, 10) : null,
             isFinal: e.status.type.name === "STATUS_FINAL",
           });
         }
@@ -1018,6 +1190,42 @@
     return map;
   }
 
+  // Grades a single pick against its game's outcome. Old picks (before game
+  // lines existed) have no `pickType`/`details` -- treated as `td` picks
+  // keyed off `player`, same as they always graded.
+  function gradePick(pick, ev) {
+    const pickType = pick.pickType || "td";
+    if (!ev) return { pickType, status: "unknown" };
+    if (!ev.isFinal) return { pickType, status: "pending" };
+    if (ev.homeScore == null || ev.awayScore == null) return { pickType, status: "unknown" };
+
+    if (pickType === "moneyline") {
+      const team = pick.details?.team;
+      const winner = ev.homeScore === ev.awayScore ? null : ev.homeScore > ev.awayScore ? ev.home : ev.away;
+      return { pickType, status: winner === null ? "push" : team === winner ? "hit" : "miss" };
+    }
+    if (pickType === "spread") {
+      const team = pick.details?.team;
+      const line = pick.details?.line;
+      if (team == null || line == null) return { pickType, status: "unknown" };
+      const teamScore = team === ev.home ? ev.homeScore : ev.awayScore;
+      const oppScore = team === ev.home ? ev.awayScore : ev.homeScore;
+      const margin = teamScore + line - oppScore;
+      return { pickType, status: margin === 0 ? "push" : margin > 0 ? "hit" : "miss" };
+    }
+    if (pickType === "total") {
+      const points = pick.details?.points;
+      const side = pick.details?.side;
+      if (points == null || !side) return { pickType, status: "unknown" };
+      const sum = ev.homeScore + ev.awayScore;
+      if (sum === points) return { pickType, status: "push" };
+      const hit = side === "over" ? sum > points : sum < points;
+      return { pickType, status: hit ? "hit" : "miss" };
+    }
+    // td
+    return { pickType, status: null }; // filled in by caller after a boxscore lookup
+  }
+
   async function loadResults() {
     const summaryEl = document.getElementById("results-summary");
     const listEl = document.getElementById("results-list");
@@ -1039,17 +1247,16 @@
     for (const pick of picks) {
       const [away, home] = (pick.matchup || "").split(" @ ").map((s) => s?.trim());
       const ev = findEvent(away, home);
-      let status = "unknown";
-      if (ev) {
-        if (!ev.isFinal) {
-          status = "pending";
-        } else {
-          const tdMap = await fetchPlayerTdMap(ev.id);
-          const tds = tdMap.get(normalizeName(pick.player)) || 0;
-          status = tds > 0 ? "hit" : "miss";
-        }
+      let { pickType, status } = gradePick(pick, ev);
+      if (status === null) {
+        // td: needs a boxscore lookup, not just the final score.
+        const playerName = pick.details?.player || pick.player || pick.selection;
+        const tdMap = await fetchPlayerTdMap(ev.id);
+        const tds = tdMap.get(normalizeName(playerName)) || 0;
+        status = tds > 0 ? "hit" : "miss";
       }
-      rows.push({ ...pick, status });
+      const selectionLabel = pick.selection || pick.player || "?";
+      rows.push({ ...pick, pickType, selection: selectionLabel, status });
     }
 
     renderResults(prevWeekId, rows);
@@ -1059,19 +1266,21 @@
     const summaryEl = document.getElementById("results-summary");
     const listEl = document.getElementById("results-list");
     const hits = rows.filter((r) => r.status === "hit").length;
-    const graded = rows.filter((r) => r.status === "hit" || r.status === "miss").length;
+    const graded = rows.filter((r) => r.status === "hit" || r.status === "miss" || r.status === "push").length;
     const pendingCount = rows.length - graded;
     summaryEl.textContent =
       `${weekId.replace("week-of-", "Week of ")}: ${hits} of ${graded} correct` +
       (pendingCount > 0 ? ` (${pendingCount} pending/unverified)` : "");
 
-    const icons = { hit: "✅", miss: "❌", pending: "⏳", unknown: "❓" };
+    const icons = { hit: "✅", miss: "❌", push: "➖", pending: "⏳", unknown: "❓" };
+    const typeTags = { td: "TD", spread: "Spread", moneyline: "ML", total: "Total" };
     listEl.innerHTML = rows
       .map(
         (r) => `<div class="result-item">
           <span class="result-icon">${icons[r.status]}</span>
           <span class="result-team">${escapeHtml(r.fantasyTeam)}</span>
-          picked <strong>${escapeHtml(r.player)}</strong>
+          picked <strong>${escapeHtml(r.selection)}</strong>
+          <span class="pick-type-tag">${typeTags[r.pickType] || ""}</span>
           <span class="result-matchup">${escapeHtml(r.matchup)}</span>
         </div>`
       )

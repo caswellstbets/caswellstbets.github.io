@@ -17,6 +17,9 @@ const BASE = `https://api.the-odds-api.com/v4/sports/${SPORT}`;
 const BOOKMAKERS = ['draftkings', 'fanduel'];
 const ESPN_TEAMS_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams?limit=32';
 const ESPN_ROSTER_URL = (teamId) => `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}/roster`;
+const ESPN_SCOREBOARD_URL = (yyyymmdd) => `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${yyyymmdd}`;
+const ESPN_CORE_ODDS_URL = (espnEventId) =>
+  `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${espnEventId}/competitions/${espnEventId}/odds?lang=en&region=us`;
 
 function mondayOf(dateStr) {
   const d = new Date(dateStr);
@@ -90,6 +93,69 @@ async function buildPlayerTeamMap(teamDisplayNames) {
   return nameToTeam;
 }
 
+const ET_DATE_FMT = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' });
+function toYyyymmdd(date) {
+  // ET calendar date, not UTC -- a Monday-night ET kickoff can already be
+  // "tomorrow" in UTC, same issue as isThursdayGame above.
+  return ET_DATE_FMT.format(date).replace(/-/g, '');
+}
+
+// Free, keyless game lines (spread/moneyline/total) from ESPN, sourced from
+// DraftKings -- unlike the anytime-TD-scorer props, these don't cost any of
+// The Odds API's metered quota at all, so this is a separate lookup by team
+// name against ESPN's own schedule/odds, not an extra market on the same call.
+async function fetchEspnEventsForDates(dates) {
+  const events = [];
+  const seen = new Set();
+  for (const d of dates) {
+    try {
+      const res = await fetch(ESPN_SCOREBOARD_URL(d));
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const e of data.events || []) {
+        if (seen.has(e.id)) continue;
+        seen.add(e.id);
+        const comp = e.competitions[0];
+        const home = comp.competitors.find((c) => c.homeAway === 'home');
+        const away = comp.competitors.find((c) => c.homeAway === 'away');
+        events.push({ id: e.id, home: home.team.displayName, away: away.team.displayName });
+      }
+    } catch (err) {
+      console.warn(`ESPN scoreboard fetch failed for ${d}: ${err.message}`);
+    }
+  }
+  return events;
+}
+
+async function fetchGameLines(espnEventId) {
+  try {
+    const res = await fetch(ESPN_CORE_ODDS_URL(espnEventId));
+    if (!res.ok) return null;
+    const data = await res.json();
+    const item = data.items?.[0]; // priority-1 provider, typically DraftKings
+    if (!item) return null;
+    return {
+      provider: item.provider?.name || null,
+      spread: {
+        home: { line: item.spread ?? null, odds: item.homeTeamOdds?.spreadOdds ?? null },
+        away: { line: item.spread != null ? -item.spread : null, odds: item.awayTeamOdds?.spreadOdds ?? null },
+      },
+      moneyline: {
+        home: item.homeTeamOdds?.moneyLine ?? null,
+        away: item.awayTeamOdds?.moneyLine ?? null,
+      },
+      total: {
+        points: item.overUnder ?? null,
+        overOdds: item.overOdds ?? null,
+        underOdds: item.underOdds ?? null,
+      },
+    };
+  } catch (err) {
+    console.warn(`ESPN core-odds fetch failed for event ${espnEventId}: ${err.message}`);
+    return null;
+  }
+}
+
 async function main() {
   const eventsRes = await fetch(`${BASE}/events?apiKey=${API_KEY}`);
   if (!eventsRes.ok) {
@@ -120,6 +186,14 @@ async function main() {
   }
   console.log(`Building player->team map for ${teamNames.size} teams...`);
   const playerTeamMap = await buildPlayerTeamMap(teamNames);
+
+  // Game lines: match each Odds-API event to its ESPN event by team names, using
+  // whichever calendar dates (ET) this week's games actually fall on.
+  const gameDates = new Set(weekEvents.map((ev) => toYyyymmdd(new Date(ev.commence_time))));
+  console.log(`Looking up ESPN events for dates: ${[...gameDates].join(', ')}`);
+  const espnEvents = await fetchEspnEventsForDates(gameDates);
+  const findEspnEvent = (home, away) =>
+    espnEvents.find((e) => (e.home === home && e.away === away) || (e.home === away && e.away === home));
 
   const games = [];
   for (const ev of weekEvents) {
@@ -162,12 +236,17 @@ async function main() {
       return rank(a) - rank(b) || a.name.localeCompare(b.name);
     });
 
+    const espnMatch = findEspnEvent(ev.home_team, ev.away_team);
+    const lines = espnMatch ? await fetchGameLines(espnMatch.id) : null;
+    if (!espnMatch) console.warn(`No ESPN match for ${ev.away_team} @ ${ev.home_team}; game lines unavailable.`);
+
     games.push({
       id: ev.id,
       home: ev.home_team,
       away: ev.away_team,
       commenceTime: ev.commence_time,
       players,
+      lines,
     });
 
     // Be polite to the API between per-event calls.

@@ -12,10 +12,17 @@ A GitHub Pages site for the league's weekly 12-leg anytime-TD-scorer parlay.
   security note below -- this uses a client-side copy of the odds API key).
 - **Fantasy team names**: pulled live, client-side, from the league's public ESPN API on every
   page load (league 96984283) -- no hardcoded list to go stale.
+- **Game lines**: each matchup also offers spread, moneyline, and over/under as pick options,
+  shown above the anytime-TD-scorer list once you expand a matchup -- one shared selection per
+  matchup either way (a leg is a TD pick *or* a line pick, never both). Lines come from ESPN's free
+  odds feed (DraftKings), matched to each game by team name -- no extra Odds API credits spent.
 - **Picks**: stored in Firebase Firestore, and vandalism-proof by construction -- see "How picks
   stay tamper-proof" below.
 - **Other entries**: a free-for-all notes board at the bottom (pick your team, type anything) for
   mistakes or off-parlay bets. Unlimited entries per team, no locking -- just an append-only log.
+- **Results tracker** (bottom of page): grades *last week's* picks (TD, spread, moneyline, and
+  total) against real final scores/box scores from ESPN's free API, live in the browser. Only
+  shows the parlay picks -- "Other entries" is never graded.
 - **League Holdings** (top of page): a value chart for the league's BTC + SPCX + cash position.
   No database involved at all -- see below.
 
@@ -34,6 +41,13 @@ If either the matchup or the team is already taken, the whole batch is rejected 
 between two people can't double-book a matchup or let one team sneak in two picks.
 `otherEntries/{weekId}/notes/{noteId}` has no such lock (any team can add as many notes as they
 want), but is still create-only so old notes can't be edited or erased.
+
+Each pick document has `pickType` (`td` | `spread` | `moneyline` | `total`), a human-readable
+`selection` (e.g. "Josh Allen" or "Buffalo Bills -5.5"), `odds`, and a `details` object with the
+exact structured data the results tracker grades against (player name, or team/line/side) -- so
+grading never has to re-parse text back out of `selection`. Picks made before game lines existed
+only have `player`/`oddsSnapshot`; both the UI and the results tracker fall back to those fields
+for old weeks, so nothing breaks.
 
 ## League Holdings (BTC + SPCX + cash value chart)
 
@@ -118,3 +132,8 @@ access control lives in `firestore.rules`.
   week -- this now reflects the real `teamLocks` database state, not just a UI guess.
 - Everything is a static site (no server needed) -- GitHub Pages serves `index.html`, `odds.json`, etc.
   directly.
+- Game lines come from ESPN's free scoreboard + core-odds endpoints (`site.api.espn.com` /
+  `sports.core.api.espn.com`), matched to each Odds-API game by team name. If ESPN doesn't have a
+  line for a game yet, that matchup just shows the TD-scorer list without a Game Lines section.
+- The results tracker treats an exact-push (spread margin of zero, or the total landing exactly on
+  the line) as a separate "push" outcome (shown as ➖), not a loss.
