@@ -232,6 +232,20 @@
   .note-item .note-team { font-weight: 600; }
   .note-item .note-time { color: #999; font-size: 0.8em; margin-left: 6px; }
 
+  .results-section {
+    margin-top: 30px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .result-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 8px 0;
+    font-size: 0.9em;
+  }
+  .result-item .result-icon { margin-right: 6px; }
+  .result-item .result-team { font-weight: 600; }
+  .result-item .result-matchup { color: #888; font-size: 0.85em; margin-left: 6px; }
+
   .footer-note {
     margin-top: 30px;
     padding-top: 14px;
@@ -914,6 +928,157 @@
   }
 
   // ---------------------------------------------------------------------
+  // Results tracker: grades LAST week's picks (this week's games haven't
+  // been played yet) against real box scores from ESPN's free API. Only
+  // covers the main TD-parlay picks -- "Other entries" notes are ignored
+  // entirely, as requested.
+  // ---------------------------------------------------------------------
+
+  function weekIdToMonday(weekId) {
+    return new Date(`${weekId.replace("week-of-", "")}T00:00:00Z`);
+  }
+  function previousWeekId(weekId) {
+    const monday = weekIdToMonday(weekId);
+    const prev = new Date(monday.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return `week-of-${prev.toISOString().slice(0, 10)}`;
+  }
+  function toYyyymmdd(date) {
+    return date.toISOString().slice(0, 10).replace(/-/g, "");
+  }
+
+  // Gets a single snapshot of a week's entries without staying subscribed --
+  // works against both the Firestore store and the local test-mode store by
+  // reusing their existing subscribe interface and unsubscribing right away.
+  function getEntriesOnce(weekId) {
+    return new Promise((resolve) => {
+      const unsub = store.subscribeEntries(weekId, (entries) => {
+        resolve(entries);
+        setTimeout(() => unsub && unsub(), 0);
+      });
+    });
+  }
+
+  // A single scoreboard call only reliably returns one calendar day's slate;
+  // the picked games span Sunday + Monday, so query both and merge.
+  async function fetchEspnEventsForWeek(weekId) {
+    const monday = weekIdToMonday(weekId);
+    const sunday = new Date(monday.getTime() + 6 * 24 * 60 * 60 * 1000);
+    const nextMonday = new Date(monday.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const events = [];
+    const seen = new Set();
+    for (const d of [toYyyymmdd(sunday), toYyyymmdd(nextMonday)]) {
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${d}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const e of data.events || []) {
+          if (seen.has(e.id)) continue;
+          seen.add(e.id);
+          const comp = e.competitions[0];
+          const home = comp.competitors.find((c) => c.homeAway === "home");
+          const away = comp.competitors.find((c) => c.homeAway === "away");
+          events.push({
+            id: e.id,
+            home: home.team.displayName,
+            away: away.team.displayName,
+            isFinal: e.status.type.name === "STATUS_FINAL",
+          });
+        }
+      } catch (err) {
+        console.warn("scoreboard fetch failed", d, err);
+      }
+    }
+    return events;
+  }
+
+  const TD_STAT_CATEGORIES = ["rushing", "receiving", "kickReturns", "puntReturns"];
+  const boxscoreTdCache = new Map();
+  async function fetchPlayerTdMap(espnEventId) {
+    if (boxscoreTdCache.has(espnEventId)) return boxscoreTdCache.get(espnEventId);
+    const map = new Map();
+    try {
+      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${espnEventId}`);
+      const data = await res.json();
+      for (const teamBlock of data.boxscore?.players || []) {
+        for (const cat of teamBlock.statistics || []) {
+          if (!TD_STAT_CATEGORIES.includes(cat.name)) continue;
+          const tdIdx = cat.labels.indexOf("TD");
+          if (tdIdx === -1) continue;
+          for (const a of cat.athletes || []) {
+            const name = normalizeName(a.athlete.displayName);
+            const td = parseInt(a.stats[tdIdx], 10) || 0;
+            map.set(name, (map.get(name) || 0) + td);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("boxscore fetch failed", espnEventId, err);
+    }
+    boxscoreTdCache.set(espnEventId, map);
+    return map;
+  }
+
+  async function loadResults() {
+    const summaryEl = document.getElementById("results-summary");
+    const listEl = document.getElementById("results-list");
+    if (!state.odds?.weekId) return;
+    const prevWeekId = previousWeekId(state.odds.weekId);
+
+    const entries = await getEntriesOnce(prevWeekId);
+    const picks = Object.values(entries || {});
+    if (picks.length === 0) {
+      summaryEl.textContent = `No picks found for last week (${prevWeekId}).`;
+      return;
+    }
+
+    const events = await fetchEspnEventsForWeek(prevWeekId);
+    const findEvent = (away, home) =>
+      events.find((e) => (e.away === away && e.home === home) || (e.away === home && e.home === away));
+
+    const rows = [];
+    for (const pick of picks) {
+      const [away, home] = (pick.matchup || "").split(" @ ").map((s) => s?.trim());
+      const ev = findEvent(away, home);
+      let status = "unknown";
+      if (ev) {
+        if (!ev.isFinal) {
+          status = "pending";
+        } else {
+          const tdMap = await fetchPlayerTdMap(ev.id);
+          const tds = tdMap.get(normalizeName(pick.player)) || 0;
+          status = tds > 0 ? "hit" : "miss";
+        }
+      }
+      rows.push({ ...pick, status });
+    }
+
+    renderResults(prevWeekId, rows);
+  }
+
+  function renderResults(weekId, rows) {
+    const summaryEl = document.getElementById("results-summary");
+    const listEl = document.getElementById("results-list");
+    const hits = rows.filter((r) => r.status === "hit").length;
+    const graded = rows.filter((r) => r.status === "hit" || r.status === "miss").length;
+    const pendingCount = rows.length - graded;
+    summaryEl.textContent =
+      `${weekId.replace("week-of-", "Week of ")}: ${hits} of ${graded} correct` +
+      (pendingCount > 0 ? ` (${pendingCount} pending/unverified)` : "");
+
+    const icons = { hit: "✅", miss: "❌", pending: "⏳", unknown: "❓" };
+    listEl.innerHTML = rows
+      .map(
+        (r) => `<div class="result-item">
+          <span class="result-icon">${icons[r.status]}</span>
+          <span class="result-team">${escapeHtml(r.fantasyTeam)}</span>
+          picked <strong>${escapeHtml(r.player)}</strong>
+          <span class="result-matchup">${escapeHtml(r.matchup)}</span>
+        </div>`
+      )
+      .join("");
+  }
+
+  // ---------------------------------------------------------------------
   // League holdings value (BTC + SPCX + cash). No database involved -- this
   // reads portfolio.json, a file a scheduled Action refreshes every 30
   // minutes from Yahoo Finance + CoinGecko (see scripts/fetch-portfolio.mjs).
@@ -1046,6 +1211,7 @@
     if (state.odds && state.odds.weekId) {
       subscribeToPicks(state.odds.weekId);
       subscribeToNotes(state.odds.weekId);
+      loadResults();
     }
   }
 
@@ -1084,6 +1250,12 @@
     </div>
     <div id="note-error" class="row-error"></div>
     <div id="notes-list"></div>
+  </div>
+
+  <div class="results-section">
+    <h2>Results Tracker</h2>
+    <div id="results-summary" class="odds-meta">Loading last week's results…</div>
+    <div id="results-list"></div>
   </div>
 
   <div class="footer-note">
