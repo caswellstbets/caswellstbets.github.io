@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-02T18:10:02.857Z",
+  "updatedAt": "2026-10-03T16:55:52.459Z",
   "weekId": "week-of-2026-09-28",
   "bookmakers": [
     "draftkings",
@@ -16,96 +16,96 @@
           "name": "Anthony Gould",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 1600,
-            "fanduel": 1600
+            "draftkings": 1500,
+            "fanduel": 2000
           }
         },
         {
           "name": "Ashton Dulin",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 1900,
-            "fanduel": 1500
+            "draftkings": 1400,
+            "fanduel": 1100
           }
         },
         {
           "name": "Daniel Jones",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 360,
-            "fanduel": 400
+            "draftkings": 390,
+            "fanduel": 410
           }
         },
         {
           "name": "Darius Slayton",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 550,
-            "fanduel": 600
+            "draftkings": 650,
+            "fanduel": 650
           }
         },
         {
           "name": "Deion Burks",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 1400,
-            "fanduel": 1500
+            "draftkings": 1200,
+            "fanduel": 1100
           }
         },
         {
           "name": "DJ Giddens",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 2500,
-            "fanduel": 1600
+            "draftkings": 2000,
+            "fanduel": 2000
           }
         },
         {
           "name": "Drew Ogletree",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 1100,
-            "fanduel": 900
+            "draftkings": 1900,
+            "fanduel": 2200
           }
         },
         {
           "name": "Jonathan Taylor",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": -300,
-            "fanduel": -320
+            "draftkings": -330,
+            "fanduel": -310
           }
         },
         {
           "name": "Josh Downs",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 190,
-            "fanduel": 195
-          }
-        },
-        {
-          "name": "Keenan Allen",
-          "team": "Indianapolis Colts",
-          "odds": {
-            "draftkings": 285,
-            "fanduel": 290
+            "draftkings": 145,
+            "fanduel": 155
           }
         },
         {
           "name": "Laquon Treadwell",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 550,
-            "fanduel": 500
+            "draftkings": 400,
+            "fanduel": 400
           }
         },
         {
           "name": "Mo Alie-Cox",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 1000,
-            "fanduel": 900
+            "draftkings": 950,
+            "fanduel": 950
+          }
+        },
+        {
+          "name": "Nick Westbrook-Ikhine",
+          "team": "Indianapolis Colts",
+          "odds": {
+            "draftkings": 850,
+            "fanduel": 950
           }
         },
         {
@@ -113,14 +113,14 @@
           "team": "Indianapolis Colts",
           "odds": {
             "draftkings": 900,
-            "fanduel": 800
+            "fanduel": 950
           }
         },
         {
           "name": "Tyler Warren",
           "team": "Indianapolis Colts",
           "odds": {
-            "draftkings": 150,
+            "draftkings": 160,
             "fanduel": 165
           }
         },
@@ -128,15 +128,15 @@
           "name": "Antonio Williams",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 550,
-            "fanduel": 550
+            "draftkings": 450,
+            "fanduel": 450
           }
         },
         {
           "name": "Austin Ekeler",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 750,
+            "draftkings": 700,
             "fanduel": 750
           }
         },
@@ -144,39 +144,39 @@
           "name": "Ben Sinnott",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 800,
-            "fanduel": 900
+            "draftkings": 1400,
+            "fanduel": 1600
           }
         },
         {
           "name": "Chig Okonkwo",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 400,
-            "fanduel": 400
+            "draftkings": 350,
+            "fanduel": 360
           }
         },
         {
           "name": "Colson Yankoff",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 2500,
-            "fanduel": 2200
+            "draftkings": 2000,
+            "fanduel": 3000
           }
         },
         {
           "name": "Dyami Brown",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 700,
-            "fanduel": 800
+            "draftkings": 600,
+            "fanduel": 650
           }
         },
         {
           "name": "Jacory Croskey-Merritt",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 105,
+            "draftkings": -105,
             "fanduel": 100
           }
         },
@@ -184,87 +184,79 @@
           "name": "Jaylin Lane",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 1300,
-            "fanduel": 650
+            "draftkings": 1100,
+            "fanduel": 1100
           }
         },
         {
           "name": "John Bates",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 750,
-            "fanduel": 900
+            "draftkings": 1200,
+            "fanduel": 1400
           }
         },
         {
           "name": "Kaytron Allen",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 350,
-            "fanduel": 390
+            "draftkings": 425,
+            "fanduel": 420
           }
         },
         {
           "name": "Luke McCaffrey",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 2000,
-            "fanduel": 2000
+            "draftkings": 1900,
+            "fanduel": 2700
           }
         },
         {
           "name": "Marcus Mariota",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 360,
-            "fanduel": 380
+            "draftkings": 400,
+            "fanduel": 390
           }
         },
         {
           "name": "Stefon Diggs",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 245,
-            "fanduel": 260
-          }
-        },
-        {
-          "name": "Terry McLaurin",
-          "team": "Washington Commanders",
-          "odds": {
-            "draftkings": 245,
-            "fanduel": 250
+            "draftkings": 185,
+            "fanduel": 190
           }
         },
         {
           "name": "Treylon Burks",
           "team": "Washington Commanders",
           "odds": {
-            "draftkings": 750,
-            "fanduel": 650
+            "draftkings": 600,
+            "fanduel": 600
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
-            "line": 3.5,
-            "odds": -102
+            "line": 4.5,
+            "odds": -115
           },
           "away": {
-            "line": -3.5,
-            "odds": -118
+            "line": -4.5,
+            "odds": -105
           }
         },
         "moneyline": {
-          "home": 164,
-          "away": -198
+          "home": 170,
+          "away": -205
         },
         "total": {
-          "points": 47.5,
-          "overOdds": -108,
-          "underOdds": -112
+          "points": 46.5,
+          "overOdds": -115,
+          "underOdds": -105
         }
       }
     },
@@ -286,14 +278,14 @@
           "team": "Arizona Cardinals",
           "odds": {
             "draftkings": 2000,
-            "fanduel": 1800
+            "fanduel": 1700
           }
         },
         {
           "name": "Elijah Higgins",
           "team": "Arizona Cardinals",
           "odds": {
-            "draftkings": 1100,
+            "draftkings": 1000,
             "fanduel": 1200
           }
         },
@@ -302,7 +294,7 @@
           "team": "Arizona Cardinals",
           "odds": {
             "draftkings": 1600,
-            "fanduel": 1300
+            "fanduel": 1400
           }
         },
         {
@@ -325,7 +317,7 @@
           "name": "Jeremiyah Love",
           "team": "Arizona Cardinals",
           "odds": {
-            "draftkings": -135,
+            "draftkings": -140,
             "fanduel": -135
           }
         },
@@ -333,7 +325,7 @@
           "name": "Kendrick Bourne",
           "team": "Arizona Cardinals",
           "odds": {
-            "draftkings": 550,
+            "draftkings": 600,
             "fanduel": 600
           }
         },
@@ -358,7 +350,7 @@
           "team": "Arizona Cardinals",
           "odds": {
             "draftkings": 3000,
-            "fanduel": 3300
+            "fanduel": 3000
           }
         },
         {
@@ -366,14 +358,14 @@
           "team": "Arizona Cardinals",
           "odds": {
             "draftkings": 2500,
-            "fanduel": 3300
+            "fanduel": 3000
           }
         },
         {
           "name": "Trey McBride",
           "team": "Arizona Cardinals",
           "odds": {
-            "draftkings": 150,
+            "draftkings": 140,
             "fanduel": 150
           }
         },
@@ -381,8 +373,8 @@
           "name": "Tyler Allgeier",
           "team": "Arizona Cardinals",
           "odds": {
-            "draftkings": 280,
-            "fanduel": 290
+            "draftkings": 320,
+            "fanduel": 280
           }
         },
         {
@@ -398,7 +390,15 @@
           "team": "New York Giants",
           "odds": {
             "draftkings": -135,
-            "fanduel": -140
+            "fanduel": -145
+          }
+        },
+        {
+          "name": "Charlie Jones",
+          "team": "New York Giants",
+          "odds": {
+            "draftkings": 2200,
+            "fanduel": 1800
           }
         },
         {
@@ -429,7 +429,7 @@
           "name": "Isaiah Likely",
           "team": "New York Giants",
           "odds": {
-            "draftkings": 285,
+            "draftkings": 280,
             "fanduel": 280
           }
         },
@@ -445,15 +445,15 @@
           "name": "Malachi Fields",
           "team": "New York Giants",
           "odds": {
-            "draftkings": 450,
-            "fanduel": 460
+            "draftkings": 475,
+            "fanduel": 450
           }
         },
         {
           "name": "Malik Nabers",
           "team": "New York Giants",
           "odds": {
-            "draftkings": 205,
+            "draftkings": 190,
             "fanduel": 195
           }
         },
@@ -477,7 +477,7 @@
           "name": "Theo Johnson",
           "team": "New York Giants",
           "odds": {
-            "draftkings": 650,
+            "draftkings": 800,
             "fanduel": 800
           }
         },
@@ -485,7 +485,7 @@
           "name": "Thomas Fidone",
           "team": "New York Giants",
           "odds": {
-            "draftkings": 2500,
+            "draftkings": 2800,
             "fanduel": 2700
           }
         },
@@ -506,7 +506,7 @@
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": 2.5,
@@ -538,7 +538,7 @@
           "name": "Calvin Ridley",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 1500,
+            "draftkings": 1200,
             "fanduel": 1200
           }
         },
@@ -546,7 +546,7 @@
           "name": "Cam Ward",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 650,
+            "draftkings": 600,
             "fanduel": 600
           }
         },
@@ -554,7 +554,7 @@
           "name": "Carnell Tate",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 360,
+            "draftkings": 350,
             "fanduel": 340
           }
         },
@@ -562,7 +562,7 @@
           "name": "Chimere Dike",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 1300,
+            "draftkings": 1700,
             "fanduel": 1600
           }
         },
@@ -570,8 +570,8 @@
           "name": "Daniel Bellinger",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 1400,
-            "fanduel": 1600
+            "draftkings": 1500,
+            "fanduel": 1700
           }
         },
         {
@@ -579,14 +579,14 @@
           "team": "Tennessee Titans",
           "odds": {
             "draftkings": 4000,
-            "fanduel": 3500
+            "fanduel": 4500
           }
         },
         {
           "name": "Elic Ayomanor",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 700,
+            "draftkings": 750,
             "fanduel": 700
           }
         },
@@ -602,30 +602,31 @@
           "name": "Julius Chestnut",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 2200,
-            "fanduel": 3000
+            "draftkings": 2000,
+            "fanduel": 4500
           }
         },
         {
           "name": "Kylen Granson",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 4000,
-            "fanduel": 3500
+            "draftkings": 5000,
+            "fanduel": 4500
           }
         },
         {
           "name": "Nicholas Singleton",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 700
+            "draftkings": 700,
+            "fanduel": 1700
           }
         },
         {
           "name": "Tony Pollard",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 215,
+            "draftkings": 225,
             "fanduel": 200
           }
         },
@@ -633,8 +634,8 @@
           "name": "Tyjae Spears",
           "team": "Tennessee Titans",
           "odds": {
-            "draftkings": 550,
-            "fanduel": 550
+            "draftkings": 600,
+            "fanduel": 600
           }
         },
         {
@@ -642,7 +643,7 @@
           "team": "Tennessee Titans",
           "odds": {
             "draftkings": 500,
-            "fanduel": 450
+            "fanduel": 440
           }
         },
         {
@@ -658,14 +659,14 @@
           "team": "Baltimore Ravens",
           "odds": {
             "draftkings": -215,
-            "fanduel": -220
+            "fanduel": -240
           }
         },
         {
           "name": "Devontez Walker",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 850,
+            "draftkings": 750,
             "fanduel": 700
           }
         },
@@ -673,31 +674,31 @@
           "name": "Durham Smythe",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 1500,
-            "fanduel": 1100
+            "draftkings": 1300,
+            "fanduel": 1200
           }
         },
         {
           "name": "Elijah Sarratt",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 1400,
-            "fanduel": 1100
+            "draftkings": 1300,
+            "fanduel": 1200
           }
         },
         {
           "name": "Josh Cuevas",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 2000,
-            "fanduel": 1800
+            "draftkings": 1700,
+            "fanduel": 1900
           }
         },
         {
           "name": "Justice Hill",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 600,
+            "draftkings": 450,
             "fanduel": 500
           }
         },
@@ -705,15 +706,15 @@
           "name": "LaJohntay Wester",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 1700,
-            "fanduel": 1300
+            "draftkings": 1600,
+            "fanduel": 1000
           }
         },
         {
           "name": "Lamar Jackson",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 235,
+            "draftkings": 230,
             "fanduel": 230
           }
         },
@@ -721,15 +722,15 @@
           "name": "Mark Andrews",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 145,
-            "fanduel": 155
+            "draftkings": 150,
+            "fanduel": 160
           }
         },
         {
           "name": "Matthew Hibner",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 1100,
+            "draftkings": 850,
             "fanduel": 850
           }
         },
@@ -737,16 +738,16 @@
           "name": "Rasheen Ali",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 3500,
-            "fanduel": 2000
+            "draftkings": 4000,
+            "fanduel": 3000
           }
         },
         {
           "name": "Rashod Bateman",
           "team": "Baltimore Ravens",
           "odds": {
-            "draftkings": 265,
-            "fanduel": 250
+            "draftkings": 255,
+            "fanduel": 260
           }
         },
         {
@@ -754,7 +755,7 @@
           "team": "Baltimore Ravens",
           "odds": {
             "draftkings": 135,
-            "fanduel": 130
+            "fanduel": 135
           }
         },
         {
@@ -762,12 +763,12 @@
           "team": "Philadelphia Eagles",
           "odds": {
             "draftkings": 3000,
-            "fanduel": 3000
+            "fanduel": 4500
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -11.5,
@@ -779,8 +780,8 @@
           }
         },
         "moneyline": {
-          "home": -675,
-          "away": 490
+          "home": -700,
+          "away": 500
         },
         "total": {
           "points": 42.5,
@@ -807,7 +808,7 @@
           "name": "Corey Kiner",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 1800,
+            "draftkings": 1900,
             "fanduel": 2200
           }
         },
@@ -815,7 +816,7 @@
           "name": "DeMario Douglas",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 360,
+            "draftkings": 370,
             "fanduel": 390
           }
         },
@@ -831,7 +832,7 @@
           "name": "Efton Chism III",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 1900,
+            "draftkings": 2000,
             "fanduel": 1700
           }
         },
@@ -839,7 +840,7 @@
           "name": "Eli Raridon",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 950,
+            "draftkings": 900,
             "fanduel": 850
           }
         },
@@ -855,7 +856,7 @@
           "name": "Kyle Williams",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 650,
+            "draftkings": 700,
             "fanduel": 800
           }
         },
@@ -863,8 +864,8 @@
           "name": "Mack Hollins",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 245,
-            "fanduel": 290
+            "draftkings": 260,
+            "fanduel": 280
           }
         },
         {
@@ -879,7 +880,7 @@
           "name": "Rhamondre Stevenson",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 130,
+            "draftkings": 135,
             "fanduel": 140
           }
         },
@@ -887,7 +888,7 @@
           "name": "Romeo Doubs",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 250,
+            "draftkings": 265,
             "fanduel": 280
           }
         },
@@ -903,7 +904,7 @@
           "name": "TreVeyon Henderson",
           "team": "New England Patriots",
           "odds": {
-            "draftkings": 200,
+            "draftkings": 215,
             "fanduel": 200
           }
         },
@@ -911,7 +912,7 @@
           "name": "Dalton Kincaid",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": 165,
+            "draftkings": 160,
             "fanduel": 155
           }
         },
@@ -919,7 +920,7 @@
           "name": "Dawson Knox",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": 550,
+            "draftkings": 600,
             "fanduel": 550
           }
         },
@@ -927,7 +928,7 @@
           "name": "DJ Moore",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": 140,
+            "draftkings": 155,
             "fanduel": 150
           }
         },
@@ -951,7 +952,7 @@
           "name": "James Cook",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": -130,
+            "draftkings": -140,
             "fanduel": -140
           }
         },
@@ -959,7 +960,7 @@
           "name": "Josh Allen",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": -135,
+            "draftkings": -140,
             "fanduel": -130
           }
         },
@@ -983,7 +984,7 @@
           "name": "Keon Coleman",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": 360,
+            "draftkings": 370,
             "fanduel": 370
           }
         },
@@ -991,7 +992,7 @@
           "name": "Khalil Shakir",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": 220,
+            "draftkings": 240,
             "fanduel": 230
           }
         },
@@ -1007,7 +1008,7 @@
           "name": "Skyler Bell",
           "team": "Buffalo Bills",
           "odds": {
-            "draftkings": 1100,
+            "draftkings": 1000,
             "fanduel": 1000
           }
         },
@@ -1021,7 +1022,7 @@
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -7,
@@ -1033,8 +1034,8 @@
           }
         },
         "moneyline": {
-          "home": -298,
-          "away": 240
+          "home": -310,
+          "away": 250
         },
         "total": {
           "points": 49.5,
@@ -1053,7 +1054,7 @@
           "name": "Andrew Beck",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 2500,
+            "draftkings": 2800,
             "fanduel": 2700
           }
         },
@@ -1061,7 +1062,7 @@
           "name": "Braelon Allen",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 125,
+            "draftkings": 115,
             "fanduel": 115
           }
         },
@@ -1069,15 +1070,15 @@
           "name": "Garrett Wilson",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 160,
-            "fanduel": 150
+            "draftkings": 150,
+            "fanduel": 155
           }
         },
         {
           "name": "Geno Smith",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 850,
+            "draftkings": 900,
             "fanduel": 800
           }
         },
@@ -1085,8 +1086,8 @@
           "name": "Isaiah Davis",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 280,
-            "fanduel": 320
+            "draftkings": 300,
+            "fanduel": 350
           }
         },
         {
@@ -1094,31 +1095,31 @@
           "team": "New York Jets",
           "odds": {
             "draftkings": 425,
-            "fanduel": 400
+            "fanduel": 440
           }
         },
         {
           "name": "Jamaal Pritchett",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 1400,
-            "fanduel": 1000
+            "draftkings": 2500,
+            "fanduel": 2000
           }
         },
         {
           "name": "Jelani Woods",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 1800,
-            "fanduel": 1700
+            "draftkings": 1900,
+            "fanduel": 1600
           }
         },
         {
           "name": "Jeremy Ruckert",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 800,
-            "fanduel": 750
+            "draftkings": 750,
+            "fanduel": 800
           }
         },
         {
@@ -1133,7 +1134,7 @@
           "name": "Kenyon Sadiq",
           "team": "New York Jets",
           "odds": {
-            "draftkings": 255,
+            "draftkings": 225,
             "fanduel": 230
           }
         },
@@ -1142,7 +1143,14 @@
           "team": "New York Jets",
           "odds": {
             "draftkings": 1200,
-            "fanduel": 1000
+            "fanduel": 1200
+          }
+        },
+        {
+          "name": "Sterling Shepard",
+          "team": "New York Jets",
+          "odds": {
+            "draftkings": 900
           }
         },
         {
@@ -1157,16 +1165,16 @@
           "name": "Colston Loveland",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 265,
-            "fanduel": 230
+            "draftkings": 240,
+            "fanduel": 240
           }
         },
         {
           "name": "D'Andre Swift",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": -140,
-            "fanduel": -155
+            "draftkings": -120,
+            "fanduel": -110
           }
         },
         {
@@ -1174,30 +1182,30 @@
           "team": "Chicago Bears",
           "odds": {
             "draftkings": 1600,
-            "fanduel": 1400
+            "fanduel": 1800
           }
         },
         {
           "name": "Kalif Raymond",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 390,
-            "fanduel": 340
+            "draftkings": 330,
+            "fanduel": 350
           }
         },
         {
           "name": "Kyle Monangai",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 100,
-            "fanduel": -155
+            "draftkings": 190,
+            "fanduel": 180
           }
         },
         {
           "name": "Luther Burden III",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 210,
+            "draftkings": 230,
             "fanduel": 210
           }
         },
@@ -1205,37 +1213,45 @@
           "name": "Rome Odunze",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 330,
-            "fanduel": 320
+            "draftkings": 320,
+            "fanduel": 330
+          }
+        },
+        {
+          "name": "Roschon Johnson",
+          "team": "Chicago Bears",
+          "odds": {
+            "draftkings": 1700,
+            "fanduel": 1600
           }
         },
         {
           "name": "Sam Roush",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 1600,
-            "fanduel": 1600
+            "draftkings": 1700,
+            "fanduel": 1900
           }
         },
         {
           "name": "Tyson Bagent",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 500,
-            "fanduel": 470
+            "draftkings": 450,
+            "fanduel": 430
           }
         },
         {
           "name": "Zavion Thomas",
           "team": "Chicago Bears",
           "odds": {
-            "draftkings": 2000,
-            "fanduel": 1500
+            "draftkings": 1900,
+            "fanduel": 1700
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -3.5,
@@ -1267,7 +1283,7 @@
           "name": "Ameer Abdullah",
           "team": "Jacksonville Jaguars",
           "odds": {
-            "draftkings": 750,
+            "draftkings": 1000,
             "fanduel": 800
           }
         },
@@ -1292,14 +1308,14 @@
           "team": "Jacksonville Jaguars",
           "odds": {
             "draftkings": 340,
-            "fanduel": 290
+            "fanduel": 300
           }
         },
         {
           "name": "Chris Rodriguez Jr.",
           "team": "Jacksonville Jaguars",
           "odds": {
-            "draftkings": 310,
+            "draftkings": 300,
             "fanduel": 290
           }
         },
@@ -1315,7 +1331,7 @@
           "name": "Jakobi Meyers",
           "team": "Jacksonville Jaguars",
           "odds": {
-            "draftkings": 245,
+            "draftkings": 240,
             "fanduel": 240
           }
         },
@@ -1323,7 +1339,7 @@
           "name": "Josh Cameron",
           "team": "Jacksonville Jaguars",
           "odds": {
-            "draftkings": 750,
+            "draftkings": 700,
             "fanduel": 650
           }
         },
@@ -1340,7 +1356,7 @@
           "team": "Jacksonville Jaguars",
           "odds": {
             "draftkings": 900,
-            "fanduel": 950
+            "fanduel": 900
           }
         },
         {
@@ -1356,15 +1372,15 @@
           "team": "Jacksonville Jaguars",
           "odds": {
             "draftkings": 1500,
-            "fanduel": 1400
+            "fanduel": 1300
           }
         },
         {
           "name": "Tanner Koziol",
           "team": "Jacksonville Jaguars",
           "odds": {
-            "draftkings": 1900,
-            "fanduel": 1400
+            "draftkings": 1600,
+            "fanduel": 1300
           }
         },
         {
@@ -1380,15 +1396,15 @@
           "team": "Jacksonville Jaguars",
           "odds": {
             "draftkings": 340,
-            "fanduel": 340
+            "fanduel": 350
           }
         },
         {
           "name": "Chase Brown",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": -180,
-            "fanduel": -165
+            "draftkings": -155,
+            "fanduel": -170
           }
         },
         {
@@ -1403,7 +1419,7 @@
           "name": "Drew Sample",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 600,
+            "draftkings": 700,
             "fanduel": 700
           }
         },
@@ -1427,7 +1443,7 @@
           "name": "Jack Endries",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 1300,
+            "draftkings": 1100,
             "fanduel": 1100
           }
         },
@@ -1435,7 +1451,7 @@
           "name": "Joe Burrow",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 950,
+            "draftkings": 900,
             "fanduel": 900
           }
         },
@@ -1443,23 +1459,31 @@
           "name": "Mike Gesicki",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 295,
-            "fanduel": 320
+            "draftkings": 320,
+            "fanduel": 310
+          }
+        },
+        {
+          "name": "Mitchell Tinsley",
+          "team": "Cincinnati Bengals",
+          "odds": {
+            "draftkings": 1000,
+            "fanduel": 1100
           }
         },
         {
           "name": "Samaje Perine",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 450,
-            "fanduel": 430
+            "draftkings": 400,
+            "fanduel": 420
           }
         },
         {
           "name": "Tahj Brooks",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 2000,
+            "draftkings": 1800,
             "fanduel": 2000
           }
         },
@@ -1468,20 +1492,20 @@
           "team": "Cincinnati Bengals",
           "odds": {
             "draftkings": 1200,
-            "fanduel": 1300
+            "fanduel": 1200
           }
         },
         {
           "name": "Tee Higgins",
           "team": "Cincinnati Bengals",
           "odds": {
-            "draftkings": 150,
+            "draftkings": 135,
             "fanduel": 135
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -2.5,
@@ -1529,7 +1553,7 @@
           "name": "CeeDee Lamb",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": 130,
+            "draftkings": 135,
             "fanduel": 130
           }
         },
@@ -1537,7 +1561,7 @@
           "name": "Dak Prescott",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": 650,
+            "draftkings": 700,
             "fanduel": 650
           }
         },
@@ -1554,7 +1578,7 @@
           "team": "Dallas Cowboys",
           "odds": {
             "draftkings": 170,
-            "fanduel": 165
+            "fanduel": 170
           }
         },
         {
@@ -1569,7 +1593,7 @@
           "name": "Jake Ferguson",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": 300,
+            "draftkings": 310,
             "fanduel": 320
           }
         },
@@ -1577,7 +1601,7 @@
           "name": "Javonte Williams",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": -130,
+            "draftkings": -125,
             "fanduel": -135
           }
         },
@@ -1601,7 +1625,7 @@
           "name": "Luke Schoonmaker",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": 1200,
+            "draftkings": 1300,
             "fanduel": 1500
           }
         },
@@ -1609,7 +1633,7 @@
           "name": "Ryan Flournoy",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": 330,
+            "draftkings": 340,
             "fanduel": 360
           }
         },
@@ -1617,7 +1641,7 @@
           "name": "Tyler Goodson",
           "team": "Dallas Cowboys",
           "odds": {
-            "draftkings": 900,
+            "draftkings": 950,
             "fanduel": 1100
           }
         },
@@ -1626,14 +1650,7 @@
           "team": "Houston Texans",
           "odds": {
             "draftkings": 3000,
-            "fanduel": 3000
-          }
-        },
-        {
-          "name": "British Brooks",
-          "team": "Houston Texans",
-          "odds": {
-            "draftkings": 2200
+            "fanduel": 2700
           }
         },
         {
@@ -1656,15 +1673,23 @@
           "name": "Dalton Schultz",
           "team": "Houston Texans",
           "odds": {
-            "draftkings": 245,
+            "draftkings": 230,
             "fanduel": 220
+          }
+        },
+        {
+          "name": "Dare Ogunbowale",
+          "team": "Houston Texans",
+          "odds": {
+            "draftkings": 1400,
+            "fanduel": 1600
           }
         },
         {
           "name": "David Montgomery",
           "team": "Houston Texans",
           "odds": {
-            "draftkings": -160,
+            "draftkings": -140,
             "fanduel": -150
           }
         },
@@ -1680,8 +1705,8 @@
           "name": "Jared Wayne",
           "team": "Houston Texans",
           "odds": {
-            "draftkings": 750,
-            "fanduel": 1000
+            "draftkings": 800,
+            "fanduel": 950
           }
         },
         {
@@ -1696,7 +1721,7 @@
           "name": "Kayshon Boutte",
           "team": "Houston Texans",
           "odds": {
-            "draftkings": 350,
+            "draftkings": 380,
             "fanduel": 370
           }
         },
@@ -1705,14 +1730,14 @@
           "team": "Houston Texans",
           "odds": {
             "draftkings": 1800,
-            "fanduel": 3000
+            "fanduel": 2700
           }
         },
         {
           "name": "Nico Collins",
           "team": "Houston Texans",
           "odds": {
-            "draftkings": 160,
+            "draftkings": 150,
             "fanduel": 155
           }
         },
@@ -1720,8 +1745,8 @@
           "name": "Woody Marks",
           "team": "Houston Texans",
           "odds": {
-            "draftkings": 200,
-            "fanduel": 210
+            "draftkings": 195,
+            "fanduel": 200
           }
         },
         {
@@ -1734,15 +1759,15 @@
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -3,
-            "odds": -110
+            "odds": -108
           },
           "away": {
             "line": 3,
-            "odds": -110
+            "odds": -112
           }
         },
         "moneyline": {
@@ -1751,8 +1776,8 @@
         },
         "total": {
           "points": 48.5,
-          "overOdds": -105,
-          "underOdds": -115
+          "overOdds": -110,
+          "underOdds": -110
         }
       }
     },
@@ -1766,79 +1791,79 @@
           "name": "Bo Melton",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 1200,
-            "fanduel": 1100
+            "draftkings": 1100,
+            "fanduel": 1500
           }
         },
         {
           "name": "Chris Brooks",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 600,
-            "fanduel": 650
+            "draftkings": 550,
+            "fanduel": 750
           }
         },
         {
           "name": "Christian Watson",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 160,
-            "fanduel": 155
+            "draftkings": 165,
+            "fanduel": 160
           }
         },
         {
           "name": "J. Michael Sturdivant",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 1200,
-            "fanduel": 1100
+            "draftkings": 1300,
+            "fanduel": 1600
           }
         },
         {
           "name": "Jonnu Smith",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 600,
-            "fanduel": 650
+            "draftkings": 650,
+            "fanduel": 800
           }
         },
         {
           "name": "Jordan Love",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 700,
-            "fanduel": 700
+            "draftkings": 650,
+            "fanduel": 750
           }
         },
         {
           "name": "Josh Whyle",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 3000,
-            "fanduel": 1300
+            "draftkings": 2500,
+            "fanduel": 3000
           }
         },
         {
           "name": "Kaleb Johnson",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 210,
-            "fanduel": 220
+            "draftkings": 250,
+            "fanduel": 240
           }
         },
         {
           "name": "Mark Redman",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 1800,
-            "fanduel": 1300
+            "draftkings": 1700,
+            "fanduel": 1400
           }
         },
         {
           "name": "MarShawn Lloyd",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 280,
+            "draftkings": 300,
             "fanduel": 280
           }
         },
@@ -1846,23 +1871,23 @@
           "name": "Matthew Golden",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 225,
-            "fanduel": 210
+            "draftkings": 205,
+            "fanduel": 200
           }
         },
         {
           "name": "Skyy Moore",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 475,
-            "fanduel": 500
+            "draftkings": 500,
+            "fanduel": 550
           }
         },
         {
           "name": "Tucker Kraft",
           "team": "Green Bay Packers",
           "odds": {
-            "draftkings": 235,
+            "draftkings": 240,
             "fanduel": 240
           }
         },
@@ -1871,14 +1896,14 @@
           "team": "Tampa Bay Buccaneers",
           "odds": {
             "draftkings": 4500,
-            "fanduel": 3000
+            "fanduel": 4000
           }
         },
         {
           "name": "Bucky Irving",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 175,
+            "draftkings": 165,
             "fanduel": 170
           }
         },
@@ -1886,7 +1911,7 @@
           "name": "Cade Otton",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 550,
+            "draftkings": 500,
             "fanduel": 550
           }
         },
@@ -1894,16 +1919,16 @@
           "name": "Chris Godwin",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 475,
-            "fanduel": 500
+            "draftkings": 500,
+            "fanduel": 550
           }
         },
         {
           "name": "Emeka Egbuka",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 300,
-            "fanduel": 300
+            "draftkings": 295,
+            "fanduel": 290
           }
         },
         {
@@ -1911,7 +1936,7 @@
           "team": "Tampa Bay Buccaneers",
           "odds": {
             "draftkings": 360,
-            "fanduel": 370
+            "fanduel": 360
           }
         },
         {
@@ -1919,14 +1944,14 @@
           "team": "Tampa Bay Buccaneers",
           "odds": {
             "draftkings": 1900,
-            "fanduel": 1900
+            "fanduel": 2000
           }
         },
         {
           "name": "Kenny Gainwell",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 450,
+            "draftkings": 500,
             "fanduel": 500
           }
         },
@@ -1934,7 +1959,7 @@
           "name": "Ko Kieft",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 5000
+            "draftkings": 5500
           }
         },
         {
@@ -1949,15 +1974,15 @@
           "name": "Sean Tucker",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 1200,
-            "fanduel": 1100
+            "draftkings": 1100,
+            "fanduel": 1200
           }
         },
         {
           "name": "Ted Hurst III",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 475,
+            "draftkings": 500,
             "fanduel": 500
           }
         },
@@ -1965,26 +1990,26 @@
           "name": "Tez Johnson",
           "team": "Tampa Bay Buccaneers",
           "odds": {
-            "draftkings": 700,
+            "draftkings": 750,
             "fanduel": 750
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
-            "line": 3.5,
-            "odds": -108
+            "line": 3,
+            "odds": -102
           },
           "away": {
-            "line": -3.5,
-            "odds": -112
+            "line": -3,
+            "odds": -118
           }
         },
         "moneyline": {
-          "home": 154,
-          "away": -185
+          "home": 142,
+          "away": -170
         },
         "total": {
           "points": 39.5,
@@ -2003,7 +2028,7 @@
           "name": "Blake Corum",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 280,
+            "draftkings": 290,
             "fanduel": 280
           }
         },
@@ -2011,7 +2036,7 @@
           "name": "CJ Daniels",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 4000,
+            "draftkings": 4500,
             "fanduel": 3500
           }
         },
@@ -2019,7 +2044,7 @@
           "name": "Colby Parkinson",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 330,
+            "draftkings": 340,
             "fanduel": 310
           }
         },
@@ -2027,7 +2052,7 @@
           "name": "Davante Adams",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 120,
+            "draftkings": 110,
             "fanduel": 115
           }
         },
@@ -2035,7 +2060,7 @@
           "name": "Davis Allen",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 850,
+            "draftkings": 900,
             "fanduel": 900
           }
         },
@@ -2043,7 +2068,7 @@
           "name": "Dean Connors",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 3500,
+            "draftkings": 4000,
             "fanduel": 2700
           }
         },
@@ -2059,7 +2084,7 @@
           "name": "Konata Mumpfield",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 650,
+            "draftkings": 600,
             "fanduel": 650
           }
         },
@@ -2067,7 +2092,7 @@
           "name": "Kyren Williams",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": -120,
+            "draftkings": -125,
             "fanduel": -115
           }
         },
@@ -2076,23 +2101,23 @@
           "team": "Los Angeles Rams",
           "odds": {
             "draftkings": 2200,
-            "fanduel": 2200
+            "fanduel": 2000
           }
         },
         {
           "name": "Max Klare",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 3500,
-            "fanduel": 2700
+            "draftkings": 2000,
+            "fanduel": 1700
           }
         },
         {
           "name": "Puka Nacua",
           "team": "Los Angeles Rams",
           "odds": {
-            "draftkings": 130,
-            "fanduel": 135
+            "draftkings": 135,
+            "fanduel": 140
           }
         },
         {
@@ -2100,7 +2125,7 @@
           "team": "Los Angeles Rams",
           "odds": {
             "draftkings": 1300,
-            "fanduel": 1300
+            "fanduel": 1500
           }
         },
         {
@@ -2112,17 +2137,10 @@
           }
         },
         {
-          "name": "Xavier Smith",
-          "team": "Los Angeles Rams",
-          "odds": {
-            "fanduel": 1300
-          }
-        },
-        {
           "name": "Britain Covey",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 3500,
+            "draftkings": 1900,
             "fanduel": 1900
           }
         },
@@ -2130,7 +2148,7 @@
           "name": "Darius Cooper",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 550,
+            "draftkings": 600,
             "fanduel": 700
           }
         },
@@ -2138,7 +2156,7 @@
           "name": "Dontayvion Wicks",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 285,
+            "draftkings": 260,
             "fanduel": 260
           }
         },
@@ -2146,7 +2164,7 @@
           "name": "E.J. Jenkins",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 3000,
+            "draftkings": 3500,
             "fanduel": 2700
           }
         },
@@ -2154,15 +2172,15 @@
           "name": "Elijah Moore",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 2500,
-            "fanduel": 1600
+            "draftkings": 2000,
+            "fanduel": 1700
           }
         },
         {
           "name": "Jalen Hurts",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 165,
+            "draftkings": 160,
             "fanduel": 165
           }
         },
@@ -2178,7 +2196,7 @@
           "name": "Makai Lemon",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 340,
+            "draftkings": 330,
             "fanduel": 350
           }
         },
@@ -2186,7 +2204,7 @@
           "name": "Saquon Barkley",
           "team": "Philadelphia Eagles",
           "odds": {
-            "draftkings": 110,
+            "draftkings": 115,
             "fanduel": 115
           }
         },
@@ -2216,7 +2234,7 @@
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": 3.5,
@@ -2248,8 +2266,8 @@
           "name": "Chris Bell",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 800,
-            "fanduel": 700
+            "draftkings": 750,
+            "fanduel": 650
           }
         },
         {
@@ -2257,15 +2275,15 @@
           "team": "Miami Dolphins",
           "odds": {
             "draftkings": 3000,
-            "fanduel": 2200
+            "fanduel": 1900
           }
         },
         {
           "name": "Greg Dulcich",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 700,
-            "fanduel": 650
+            "draftkings": 650,
+            "fanduel": 600
           }
         },
         {
@@ -2273,7 +2291,7 @@
           "team": "Miami Dolphins",
           "odds": {
             "draftkings": 4000,
-            "fanduel": 3000
+            "fanduel": 3300
           }
         },
         {
@@ -2281,7 +2299,7 @@
           "team": "Miami Dolphins",
           "odds": {
             "draftkings": 340,
-            "fanduel": 360
+            "fanduel": 350
           }
         },
         {
@@ -2304,23 +2322,23 @@
           "name": "Malik Washington",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 450,
-            "fanduel": 450
+            "draftkings": 400,
+            "fanduel": 440
           }
         },
         {
           "name": "Malik Willis",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 450,
-            "fanduel": 410
+            "draftkings": 475,
+            "fanduel": 400
           }
         },
         {
           "name": "Ollie Gordon II",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 310,
+            "draftkings": 290,
             "fanduel": 280
           }
         },
@@ -2336,7 +2354,7 @@
           "name": "Seydou Traore",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 3500,
+            "draftkings": 4000,
             "fanduel": 3500
           }
         },
@@ -2344,16 +2362,16 @@
           "name": "Will Kacmarek",
           "team": "Miami Dolphins",
           "odds": {
-            "draftkings": 2000,
-            "fanduel": 1800
+            "draftkings": 2200,
+            "fanduel": 1700
           }
         },
         {
           "name": "Aaron Jones",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": -170,
-            "fanduel": -170
+            "draftkings": -160,
+            "fanduel": -155
           }
         },
         {
@@ -2361,54 +2379,54 @@
           "team": "Minnesota Vikings",
           "odds": {
             "draftkings": 750,
-            "fanduel": 700
+            "fanduel": 750
           }
         },
         {
           "name": "Demond Claiborne",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 1200,
-            "fanduel": 1400
+            "draftkings": 1100,
+            "fanduel": 1200
           }
         },
         {
           "name": "Gavin Bartholomew",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 1000,
-            "fanduel": 1100
+            "draftkings": 1100,
+            "fanduel": 1200
           }
         },
         {
           "name": "Jauan Jennings",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 400,
-            "fanduel": 400
+            "draftkings": 390,
+            "fanduel": 420
           }
         },
         {
           "name": "Jordan Addison",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 125,
-            "fanduel": 125
+            "draftkings": 115,
+            "fanduel": 130
           }
         },
         {
           "name": "Kyler Murray",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 340,
-            "fanduel": 320
+            "draftkings": 330,
+            "fanduel": 340
           }
         },
         {
           "name": "Max Bredeson",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 1600,
+            "draftkings": 1400,
             "fanduel": 1400
           }
         },
@@ -2424,34 +2442,34 @@
           "name": "T.J. Hockenson",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 160,
-            "fanduel": 170
+            "draftkings": 155,
+            "fanduel": 180
           }
         },
         {
           "name": "Tai Felton",
           "team": "Minnesota Vikings",
           "odds": {
-            "draftkings": 550,
-            "fanduel": 700
+            "draftkings": 500,
+            "fanduel": 550
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
-            "line": -10.5,
+            "line": -10,
             "odds": -108
           },
           "away": {
-            "line": 10.5,
+            "line": 10,
             "odds": -112
           }
         },
         "moneyline": {
-          "home": -625,
-          "away": 455
+          "home": -520,
+          "away": 390
         },
         "total": {
           "points": 38.5,
@@ -2470,7 +2488,7 @@
           "name": "Adam Prentice",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 3000,
+            "draftkings": 2800,
             "fanduel": 2200
           }
         },
@@ -2478,7 +2496,7 @@
           "name": "Adam Trautman",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 950,
+            "draftkings": 900,
             "fanduel": 850
           }
         },
@@ -2494,7 +2512,7 @@
           "name": "Courtland Sutton",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 220,
+            "draftkings": 205,
             "fanduel": 220
           }
         },
@@ -2503,14 +2521,14 @@
           "team": "Denver Broncos",
           "odds": {
             "draftkings": 1200,
-            "fanduel": 1100
+            "fanduel": 1000
           }
         },
         {
           "name": "Evan Engram",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 500,
+            "draftkings": 475,
             "fanduel": 480
           }
         },
@@ -2518,7 +2536,7 @@
           "name": "J.K. Dobbins",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 120,
+            "draftkings": 115,
             "fanduel": 120
           }
         },
@@ -2526,16 +2544,8 @@
           "name": "Jaylen Waddle",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 215,
+            "draftkings": 190,
             "fanduel": 210
-          }
-        },
-        {
-          "name": "Lil'Jordan Humphrey",
-          "team": "Denver Broncos",
-          "odds": {
-            "draftkings": 1200,
-            "fanduel": 1000
           }
         },
         {
@@ -2551,14 +2561,14 @@
           "team": "Denver Broncos",
           "odds": {
             "draftkings": 1200,
-            "fanduel": 1100
+            "fanduel": 1000
           }
         },
         {
           "name": "Pat Bryant",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 360,
+            "draftkings": 350,
             "fanduel": 360
           }
         },
@@ -2566,15 +2576,15 @@
           "name": "RJ Harvey",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 220,
-            "fanduel": 220
+            "draftkings": 235,
+            "fanduel": 210
           }
         },
         {
           "name": "Troy Franklin",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 1000,
+            "draftkings": 950,
             "fanduel": 1000
           }
         },
@@ -2582,7 +2592,7 @@
           "name": "Tyler Badie",
           "team": "Denver Broncos",
           "odds": {
-            "draftkings": 1100,
+            "draftkings": 1000,
             "fanduel": 1100
           }
         },
@@ -2590,7 +2600,7 @@
           "name": "Brandin Cooks",
           "team": "San Francisco 49ers",
           "odds": {
-            "draftkings": 700,
+            "draftkings": 750,
             "fanduel": 650
           }
         },
@@ -2599,7 +2609,7 @@
           "team": "San Francisco 49ers",
           "odds": {
             "draftkings": 2000,
-            "fanduel": 2000
+            "fanduel": 2200
           }
         },
         {
@@ -2614,8 +2624,8 @@
           "name": "Christian McCaffrey",
           "team": "San Francisco 49ers",
           "odds": {
-            "draftkings": -185,
-            "fanduel": -195
+            "draftkings": -180,
+            "fanduel": -190
           }
         },
         {
@@ -2654,8 +2664,8 @@
           "name": "Kaelon Black",
           "team": "San Francisco 49ers",
           "odds": {
-            "draftkings": 310,
-            "fanduel": 310
+            "draftkings": 300,
+            "fanduel": 320
           }
         },
         {
@@ -2663,7 +2673,7 @@
           "team": "San Francisco 49ers",
           "odds": {
             "draftkings": 650,
-            "fanduel": 650
+            "fanduel": 800
           }
         },
         {
@@ -2678,7 +2688,7 @@
           "name": "Mike Evans",
           "team": "San Francisco 49ers",
           "odds": {
-            "draftkings": 170,
+            "draftkings": 150,
             "fanduel": 155
           }
         },
@@ -2686,13 +2696,20 @@
           "name": "James Jordan",
           "team": null,
           "odds": {
-            "draftkings": 2800,
-            "fanduel": 2200
+            "draftkings": 2500,
+            "fanduel": 2500
+          }
+        },
+        {
+          "name": "Lil'Jordan Humphrey",
+          "team": null,
+          "odds": {
+            "fanduel": 1000
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -3,
@@ -2724,7 +2741,7 @@
           "name": "Brashard Smith",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 750,
+            "draftkings": 650,
             "fanduel": 600
           }
         },
@@ -2740,7 +2757,7 @@
           "name": "Emmett Johnson",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 425,
+            "draftkings": 475,
             "fanduel": 410
           }
         },
@@ -2748,7 +2765,7 @@
           "name": "Jake Briningstool",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 2000,
+            "draftkings": 1900,
             "fanduel": 2200
           }
         },
@@ -2764,7 +2781,7 @@
           "name": "Jared Wiley",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 1900,
+            "draftkings": 2000,
             "fanduel": 2200
           }
         },
@@ -2796,7 +2813,7 @@
           "name": "Patrick Mahomes",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 400,
+            "draftkings": 425,
             "fanduel": 380
           }
         },
@@ -2804,8 +2821,8 @@
           "name": "Rashee Rice",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 145,
-            "fanduel": 145
+            "draftkings": 140,
+            "fanduel": 150
           }
         },
         {
@@ -2820,7 +2837,7 @@
           "name": "Tyquan Thornton",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 450,
+            "draftkings": 475,
             "fanduel": 470
           }
         },
@@ -2828,7 +2845,7 @@
           "name": "Xavier Worthy",
           "team": "Kansas City Chiefs",
           "odds": {
-            "draftkings": 240,
+            "draftkings": 235,
             "fanduel": 230
           }
         },
@@ -2836,7 +2853,7 @@
           "name": "Ashton Jeanty",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": -130,
+            "draftkings": -125,
             "fanduel": -135
           }
         },
@@ -2844,7 +2861,7 @@
           "name": "Brock Bowers",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 180,
+            "draftkings": 160,
             "fanduel": 185
           }
         },
@@ -2852,7 +2869,7 @@
           "name": "Cody White",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 550,
+            "draftkings": 600,
             "fanduel": 600
           }
         },
@@ -2860,7 +2877,7 @@
           "name": "Connor Heyward",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 1800,
+            "draftkings": 2000,
             "fanduel": 1800
           }
         },
@@ -2868,7 +2885,7 @@
           "name": "Dareke Young",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 1600,
+            "draftkings": 1400,
             "fanduel": 1200
           }
         },
@@ -2876,6 +2893,7 @@
           "name": "Dylan Laube",
           "team": "Las Vegas Raiders",
           "odds": {
+            "draftkings": 1900,
             "fanduel": 2200
           }
         },
@@ -2891,7 +2909,7 @@
           "name": "Jalen Nailor",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 500,
+            "draftkings": 475,
             "fanduel": 410
           }
         },
@@ -2899,7 +2917,7 @@
           "name": "Kirk Cousins",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 1400,
+            "draftkings": 1500,
             "fanduel": 1900
           }
         },
@@ -2907,7 +2925,7 @@
           "name": "Malik Benson",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 1000,
+            "draftkings": 1100,
             "fanduel": 1100
           }
         },
@@ -2923,6 +2941,7 @@
           "name": "Mike Washington Jr.",
           "team": "Las Vegas Raiders",
           "odds": {
+            "draftkings": 500,
             "fanduel": 480
           }
         },
@@ -2930,26 +2949,26 @@
           "name": "Tre Tucker",
           "team": "Las Vegas Raiders",
           "odds": {
-            "draftkings": 350,
+            "draftkings": 330,
             "fanduel": 300
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": 4.5,
-            "odds": -108
+            "odds": -105
           },
           "away": {
             "line": -4.5,
-            "odds": -112
+            "odds": -115
           }
         },
         "moneyline": {
-          "home": 180,
-          "away": -218
+          "home": 185,
+          "away": -225
         },
         "total": {
           "points": 47.5,
@@ -2969,14 +2988,13 @@
           "team": "Los Angeles Chargers",
           "odds": {
             "draftkings": 3500,
-            "fanduel": 4000
+            "fanduel": 3500
           }
         },
         {
           "name": "Brenen Thompson",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 1400,
             "fanduel": 1200
           }
         },
@@ -2984,7 +3002,7 @@
           "name": "Derius Davis",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 1400,
+            "draftkings": 1300,
             "fanduel": 1200
           }
         },
@@ -2992,23 +3010,23 @@
           "name": "Hayden Rucci",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 1600,
-            "fanduel": 1400
+            "draftkings": 1700,
+            "fanduel": 2200
           }
         },
         {
           "name": "Justin Herbert",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 600,
-            "fanduel": 550
+            "draftkings": 550,
+            "fanduel": 600
           }
         },
         {
           "name": "Keaton Mitchell",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 475,
+            "draftkings": 450,
             "fanduel": 550
           }
         },
@@ -3016,16 +3034,24 @@
           "name": "Kimani Vidal",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 1700,
+            "draftkings": 1400,
             "fanduel": 1600
+          }
+        },
+        {
+          "name": "Ladd McConkey",
+          "team": "Los Angeles Chargers",
+          "odds": {
+            "draftkings": 300,
+            "fanduel": 330
           }
         },
         {
           "name": "Marquez Valdes-Scantling",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 1200,
-            "fanduel": 1000
+            "draftkings": 1700,
+            "fanduel": 2000
           }
         },
         {
@@ -3033,31 +3059,31 @@
           "team": "Los Angeles Chargers",
           "odds": {
             "draftkings": 110,
-            "fanduel": 105
+            "fanduel": 110
           }
         },
         {
           "name": "Oronde Gadsden II",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 300,
-            "fanduel": 300
+            "draftkings": 380,
+            "fanduel": 400
           }
         },
         {
           "name": "Quentin Johnston",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 280,
-            "fanduel": 290
+            "draftkings": 370,
+            "fanduel": 370
           }
         },
         {
           "name": "Tre Harris",
           "team": "Los Angeles Chargers",
           "odds": {
-            "draftkings": 400,
-            "fanduel": 400
+            "draftkings": 425,
+            "fanduel": 550
           }
         },
         {
@@ -3080,8 +3106,8 @@
           "name": "Cooper Kupp",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 330,
-            "fanduel": 320
+            "draftkings": 340,
+            "fanduel": 330
           }
         },
         {
@@ -3089,14 +3115,14 @@
           "team": "Seattle Seahawks",
           "odds": {
             "draftkings": 1200,
-            "fanduel": 1200
+            "fanduel": 1300
           }
         },
         {
           "name": "Emanuel Wilson",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 135,
+            "draftkings": 130,
             "fanduel": 135
           }
         },
@@ -3104,7 +3130,7 @@
           "name": "Eric Saubert",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 1200,
+            "draftkings": 1100,
             "fanduel": 1000
           }
         },
@@ -3112,7 +3138,7 @@
           "name": "George Holani",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 170,
+            "draftkings": 140,
             "fanduel": 140
           }
         },
@@ -3121,14 +3147,14 @@
           "team": "Seattle Seahawks",
           "odds": {
             "draftkings": -120,
-            "fanduel": -125
+            "fanduel": -120
           }
         },
         {
           "name": "Montorie Foster Jr.",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 2500,
+            "draftkings": 2200,
             "fanduel": 2000
           }
         },
@@ -3136,15 +3162,15 @@
           "name": "Nick Kallerup",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 1600,
-            "fanduel": 1200
+            "draftkings": 1500,
+            "fanduel": 1300
           }
         },
         {
           "name": "Rashid Shaheed",
           "team": "Seattle Seahawks",
           "odds": {
-            "draftkings": 320,
+            "draftkings": 340,
             "fanduel": 300
           }
         },
@@ -3166,7 +3192,7 @@
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -7,
@@ -3178,8 +3204,8 @@
           }
         },
         "moneyline": {
-          "home": -380,
-          "away": 300
+          "home": -375,
+          "away": 295
         },
         "total": {
           "points": 42.5,
@@ -3199,7 +3225,7 @@
           "team": "Detroit Lions",
           "odds": {
             "draftkings": -120,
-            "fanduel": -125
+            "fanduel": -135
           }
         },
         {
@@ -3215,7 +3241,7 @@
           "team": "Detroit Lions",
           "odds": {
             "draftkings": 500,
-            "fanduel": 460
+            "fanduel": 440
           }
         },
         {
@@ -3231,15 +3257,15 @@
           "team": "Detroit Lions",
           "odds": {
             "draftkings": 2500,
-            "fanduel": 3000
+            "fanduel": 3500
           }
         },
         {
           "name": "Jahmyr Gibbs",
           "team": "Detroit Lions",
           "odds": {
-            "draftkings": -320,
-            "fanduel": -340
+            "draftkings": -330,
+            "fanduel": -360
           }
         },
         {
@@ -3247,7 +3273,7 @@
           "team": "Detroit Lions",
           "odds": {
             "draftkings": 200,
-            "fanduel": 200
+            "fanduel": 195
           }
         },
         {
@@ -3255,15 +3281,15 @@
           "team": "Detroit Lions",
           "odds": {
             "draftkings": 1200,
-            "fanduel": 1000
+            "fanduel": 1100
           }
         },
         {
           "name": "Sam LaPorta",
           "team": "Detroit Lions",
           "odds": {
-            "draftkings": 180,
-            "fanduel": 185
+            "draftkings": 195,
+            "fanduel": 180
           }
         },
         {
@@ -3287,7 +3313,7 @@
           "team": "Detroit Lions",
           "odds": {
             "draftkings": 1900,
-            "fanduel": 1500
+            "fanduel": 1900
           }
         },
         {
@@ -3319,14 +3345,14 @@
           "team": "Carolina Panthers",
           "odds": {
             "draftkings": 475,
-            "fanduel": 480
+            "fanduel": 490
           }
         },
         {
           "name": "Brycen Tremayne",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 900,
+            "draftkings": 750,
             "fanduel": 750
           }
         },
@@ -3342,8 +3368,8 @@
           "name": "Darren Waller",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 255,
-            "fanduel": 270
+            "draftkings": 245,
+            "fanduel": 260
           }
         },
         {
@@ -3351,15 +3377,15 @@
           "team": "Carolina Panthers",
           "odds": {
             "draftkings": 2200,
-            "fanduel": 2000
+            "fanduel": 2200
           }
         },
         {
           "name": "Feleipe Franks",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 4500,
-            "fanduel": 4000
+            "draftkings": 5000,
+            "fanduel": 3300
           }
         },
         {
@@ -3373,7 +3399,7 @@
           "name": "Jalen Coker",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 215,
+            "draftkings": 200,
             "fanduel": 195
           }
         },
@@ -3381,7 +3407,7 @@
           "name": "John Metchie III",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 700,
+            "draftkings": 800,
             "fanduel": 650
           }
         },
@@ -3389,7 +3415,7 @@
           "name": "Mitchell Evans",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 850,
+            "draftkings": 950,
             "fanduel": 800
           }
         },
@@ -3397,7 +3423,7 @@
           "name": "Tetairoa McMillan",
           "team": "Carolina Panthers",
           "odds": {
-            "draftkings": 160,
+            "draftkings": 155,
             "fanduel": 155
           }
         },
@@ -3411,7 +3437,7 @@
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": 3.5,
@@ -3423,8 +3449,8 @@
           }
         },
         "moneyline": {
-          "home": 154,
-          "away": -185
+          "home": 150,
+          "away": -180
         },
         "total": {
           "points": 50.5,
@@ -3451,24 +3477,24 @@
           "name": "Bijan Robinson",
           "team": "Atlanta Falcons",
           "odds": {
-            "draftkings": -240,
-            "fanduel": -220
+            "draftkings": -225,
+            "fanduel": -230
           }
         },
         {
           "name": "Brian Robinson Jr.",
           "team": "Atlanta Falcons",
           "odds": {
-            "draftkings": 310,
-            "fanduel": 300
+            "draftkings": 300,
+            "fanduel": 290
           }
         },
         {
           "name": "Charlie Woerner",
           "team": "Atlanta Falcons",
           "odds": {
-            "draftkings": 2500,
-            "fanduel": 1900
+            "draftkings": 2800,
+            "fanduel": 2000
           }
         },
         {
@@ -3483,7 +3509,7 @@
           "name": "Drake London",
           "team": "Atlanta Falcons",
           "odds": {
-            "draftkings": 130,
+            "draftkings": 125,
             "fanduel": 140
           }
         },
@@ -3491,8 +3517,8 @@
           "name": "Jahan Dotson",
           "team": "Atlanta Falcons",
           "odds": {
-            "draftkings": 450,
-            "fanduel": 480
+            "draftkings": 500,
+            "fanduel": 470
           }
         },
         {
@@ -3500,14 +3526,14 @@
           "team": "Atlanta Falcons",
           "odds": {
             "draftkings": 425,
-            "fanduel": 400
+            "fanduel": 390
           }
         },
         {
           "name": "Michael Penix Jr.",
           "team": "Atlanta Falcons",
           "odds": {
-            "draftkings": 750,
+            "draftkings": 900,
             "fanduel": 850
           }
         },
@@ -3539,15 +3565,15 @@
           "name": "Alvin Kamara",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 115,
-            "fanduel": 120
+            "draftkings": 135,
+            "fanduel": 125
           }
         },
         {
           "name": "Barion Brown",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 1100,
+            "draftkings": 1200,
             "fanduel": 1000
           }
         },
@@ -3555,8 +3581,8 @@
           "name": "Bryce Lance",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 550,
-            "fanduel": 490
+            "draftkings": 450,
+            "fanduel": 450
           }
         },
         {
@@ -3564,22 +3590,22 @@
           "team": "New Orleans Saints",
           "odds": {
             "draftkings": 125,
-            "fanduel": 115
+            "fanduel": 120
           }
         },
         {
           "name": "CJ Donaldson",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 850,
-            "fanduel": 800
+            "draftkings": 750,
+            "fanduel": 850
           }
         },
         {
           "name": "Devaughn Vele",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 235,
+            "draftkings": 220,
             "fanduel": 210
           }
         },
@@ -3587,7 +3613,7 @@
           "name": "Juwan Johnson",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 240,
+            "draftkings": 230,
             "fanduel": 230
           }
         },
@@ -3595,15 +3621,15 @@
           "name": "Kendre Miller",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 270,
-            "fanduel": 270
+            "draftkings": 260,
+            "fanduel": 280
           }
         },
         {
           "name": "Kevin Austin",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 1400,
+            "draftkings": 1100,
             "fanduel": 1000
           }
         },
@@ -3611,45 +3637,45 @@
           "name": "Noah Fant",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 500,
-            "fanduel": 490
+            "draftkings": 450,
+            "fanduel": 500
           }
         },
         {
           "name": "Oscar Delp",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 2500,
-            "fanduel": 2500
+            "draftkings": 2800,
+            "fanduel": 2700
           }
         },
         {
           "name": "Treyton Welch",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 3500,
-            "fanduel": 2700
+            "draftkings": 2200,
+            "fanduel": 2500
           }
         },
         {
           "name": "Tyler Shough",
           "team": "New Orleans Saints",
           "odds": {
-            "draftkings": 320,
-            "fanduel": 290
+            "draftkings": 295,
+            "fanduel": 300
           }
         }
       ],
       "lines": {
-        "provider": "Draft Kings",
+        "provider": "DraftKings",
         "spread": {
           "home": {
             "line": -2.5,
-            "odds": -112
+            "odds": -105
           },
           "away": {
             "line": 2.5,
-            "odds": -108
+            "odds": -115
           }
         },
         "moneyline": {
@@ -3660,6 +3686,35 @@
           "points": 47.5,
           "overOdds": -112,
           "underOdds": -108
+        }
+      }
+    },
+    {
+      "id": "21b26266f3d78af02eb672e606275d95",
+      "home": "Jacksonville Jaguars",
+      "away": "Philadelphia Eagles",
+      "commenceTime": "2026-10-11T13:30:00Z",
+      "players": [],
+      "lines": {
+        "provider": "DraftKings",
+        "spread": {
+          "home": {
+            "line": -3,
+            "odds": -102
+          },
+          "away": {
+            "line": 3,
+            "odds": -118
+          }
+        },
+        "moneyline": {
+          "home": -148,
+          "away": 124
+        },
+        "total": {
+          "points": 44.5,
+          "overOdds": -105,
+          "underOdds": -115
         }
       }
     }
