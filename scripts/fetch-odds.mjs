@@ -21,12 +21,18 @@ const ESPN_SCOREBOARD_URL = (yyyymmdd) => `https://site.api.espn.com/apis/site/v
 const ESPN_CORE_ODDS_URL = (espnEventId) =>
   `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${espnEventId}/competitions/${espnEventId}/odds?lang=en&region=us`;
 
-function mondayOf(dateStr) {
-  const d = new Date(dateStr);
-  const day = d.getUTCDay(); // 0 = Sunday
-  const diff = (day === 0 ? -6 : 1) - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d.toISOString().slice(0, 10);
+// The NFL week a kickoff belongs to, identified by that week's Monday (YYYY-MM-DD),
+// using the kickoff's US Eastern calendar date -- not UTC, where a Sunday-night game
+// is already "Monday". A week runs Tue-Mon, so Saturday/Sunday games roll back to the
+// Monday before them, and a Monday-night game belongs to the week it ENDS (i.e. the
+// Monday a full week earlier, same weekId as that Sunday's games).
+const ET_YMD = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' });
+function nflWeekMonday(commenceTimeIso) {
+  const [y, m, d] = ET_YMD.format(new Date(commenceTimeIso)).split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const sinceMonday = (date.getUTCDay() + 6) % 7; // Mon=0 ... Sun=6
+  date.setUTCDate(date.getUTCDate() - (sinceMonday === 0 ? 7 : sinceMonday));
+  return date.toISOString().slice(0, 10);
 }
 
 const ET_WEEKDAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' });
@@ -164,20 +170,25 @@ async function main() {
   logQuota(eventsRes, 'events');
   const allEvents = await eventsRes.json();
 
+  // Pick ONE NFL week: the earliest week that still has a (non-Thursday) game that
+  // hasn't finished (kicked off within the last 12h or later). A rolling "next N days"
+  // window would start pulling in next Sunday's early games by Saturday afternoon.
   const now = Date.now();
-  const windowEnd = now + 8 * 24 * 60 * 60 * 1000;
-  const weekEvents = allEvents.filter((e) => {
+  const upcoming = allEvents.filter((e) => {
     const t = new Date(e.commence_time).getTime();
-    return t >= now - 12 * 60 * 60 * 1000 && t <= windowEnd && !isThursdayGame(e.commence_time);
+    return t >= now - 12 * 60 * 60 * 1000 && !isThursdayGame(e.commence_time);
   });
 
-  if (weekEvents.length === 0) {
-    console.log('No upcoming NFL events in the current window; leaving odds.json untouched.');
+  if (upcoming.length === 0) {
+    console.log('No upcoming NFL events found; leaving odds.json untouched.');
     return;
   }
 
-  weekEvents.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
-  const weekId = `week-of-${mondayOf(weekEvents[0].commence_time)}`;
+  const weekMonday = upcoming.map((e) => nflWeekMonday(e.commence_time)).sort()[0];
+  const weekEvents = upcoming
+    .filter((e) => nflWeekMonday(e.commence_time) === weekMonday)
+    .sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+  const weekId = `week-of-${weekMonday}`;
 
   const teamNames = new Set();
   for (const ev of weekEvents) {

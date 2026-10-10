@@ -570,7 +570,7 @@
   async function loadOdds() {
     const res = await fetch(`odds.json?t=${Date.now()}`);
     if (!res.ok) throw new Error(`odds.json fetch failed: ${res.status}`);
-    state.odds = await res.json();
+    state.odds = keepOnlyWeekGames(await res.json());
   }
 
   const ET_PARTS_FMT = new Intl.DateTimeFormat("en-US", {
@@ -645,11 +645,25 @@
       .replace(/[^a-z\s-]/g, "").trim();
   }
 
-  function mondayOf(dateStr) {
-    const d = new Date(dateStr);
-    const day = d.getUTCDay();
-    d.setUTCDate(d.getUTCDate() + ((day === 0 ? -6 : 1) - day));
-    return d.toISOString().slice(0, 10);
+  // The NFL week a kickoff belongs to, identified by that week's Monday (YYYY-MM-DD),
+  // from the kickoff's US Eastern calendar date (not UTC, where a Sunday-night game is
+  // already "Monday"). A week runs Tue-Mon: Saturday/Sunday games roll back to the Monday
+  // before them, and a Monday-night game belongs to the week it ENDS (the Monday a full
+  // week earlier -- same weekId as that Sunday's games).
+  function nflWeekMonday(commenceTimeIso) {
+    const [y, m, d] = ET_DATE_KEY_FMT.format(new Date(commenceTimeIso)).split("-").map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    const sinceMonday = (date.getUTCDay() + 6) % 7; // Mon=0 ... Sun=6
+    date.setUTCDate(date.getUTCDate() - (sinceMonday === 0 ? 7 : sinceMonday));
+    return date.toISOString().slice(0, 10);
+  }
+
+  // Safety net: drop any game that isn't part of odds.weekId's NFL week, whatever
+  // produced the data (e.g. an older odds.json with next week's early games mixed in).
+  function keepOnlyWeekGames(odds) {
+    if (!odds?.weekId || !Array.isArray(odds.games)) return odds;
+    const monday = odds.weekId.replace("week-of-", "");
+    return { ...odds, games: odds.games.filter((g) => nflWeekMonday(g.commenceTime) === monday) };
   }
 
   async function buildPlayerTeamMap(teamNames) {
@@ -730,25 +744,31 @@
     if (!eventsRes.ok) throw new Error(`events fetch failed: ${eventsRes.status}`);
     const allEvents = await eventsRes.json();
 
+    // ONE NFL week only: the earliest week with a (non-Thursday) game that hasn't
+    // finished. A rolling "next N days" window pulls in next Sunday's early games
+    // by Saturday afternoon.
     const now = Date.now();
-    const windowEnd = now + 8 * 24 * 60 * 60 * 1000;
-    const weekEvents = allEvents
-      .filter((e) => {
-        const t = new Date(e.commence_time).getTime();
-        return t >= now - 12 * 3600 * 1000 && t <= windowEnd && !isThursdayGame(e.commence_time);
-      })
-      .sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+    const upcoming = allEvents.filter((e) => {
+      const t = new Date(e.commence_time).getTime();
+      return t >= now - 12 * 3600 * 1000 && !isThursdayGame(e.commence_time);
+    });
 
-    if (weekEvents.length === 0) {
+    if (upcoming.length === 0) {
       return { updatedAt: new Date().toISOString(), weekId: state.odds?.weekId || null, bookmakers: BOOKMAKERS, games: [] };
     }
 
-    const weekId = `week-of-${mondayOf(weekEvents[0].commence_time)}`;
+    const weekMonday = upcoming.map((e) => nflWeekMonday(e.commence_time)).sort()[0];
+    const weekEvents = upcoming
+      .filter((e) => nflWeekMonday(e.commence_time) === weekMonday)
+      .sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+    const weekId = `week-of-${weekMonday}`;
     const teamNames = new Set();
     weekEvents.forEach((e) => { teamNames.add(e.home_team); teamNames.add(e.away_team); });
     const playerTeamMap = await buildPlayerTeamMap(teamNames);
 
-    const gameDates = new Set(weekEvents.map((e) => toYyyymmdd(new Date(e.commence_time))));
+    // ET calendar dates (matches ESPN's scoreboard days) -- a Sunday-night kickoff is
+    // already Monday in UTC and would otherwise miss its game lines.
+    const gameDates = new Set(weekEvents.map((e) => etDateKey(new Date(e.commence_time)).replace(/-/g, "")));
     const espnEvents = await fetchEspnEventsForDatesClient(gameDates);
     const findEspnEvent = (home, away) =>
       espnEvents.find((e) => (e.home === home && e.away === away) || (e.home === away && e.away === home));
@@ -793,7 +813,7 @@
     els.refreshStatus.textContent = "Refreshing… (this can take ~10 seconds)";
     try {
       const fresh = await fetchLiveOdds();
-      state.odds = fresh;
+      state.odds = keepOnlyWeekGames(fresh);
       recordRefresh(status.meta);
       renderOddsMeta();
       renderMatchups();
