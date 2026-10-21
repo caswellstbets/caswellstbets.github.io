@@ -638,6 +638,14 @@
     return ET_WEEKDAY_FMT.format(new Date(iso)) === "Thu";
   }
 
+  // Games kicking off before this hour (US Eastern) are left out entirely -- i.e. the
+  // early-morning international games. Change the number to move the cutoff.
+  const EARLIEST_KICKOFF_HOUR_ET = 10;
+  const ET_HOUR_FMT = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hourCycle: "h23" });
+  function isTooEarlyGame(iso) {
+    return Number(ET_HOUR_FMT.format(new Date(iso))) < EARLIEST_KICKOFF_HOUR_ET;
+  }
+
   function normalizeName(name) {
     return name.normalize("NFD").replace(/[̀-ͯ]/g, "")
       .toLowerCase().replace(/[.']/g, "")
@@ -658,12 +666,16 @@
     return date.toISOString().slice(0, 10);
   }
 
-  // Safety net: drop any game that isn't part of odds.weekId's NFL week, whatever
-  // produced the data (e.g. an older odds.json with next week's early games mixed in).
+  // Safety net applied to whatever odds data the page ends up with, regardless of what
+  // produced it: drop any game outside odds.weekId's NFL week, and any game kicking off
+  // before the earliest-kickoff cutoff (so an older odds.json can't bring either back).
   function keepOnlyWeekGames(odds) {
     if (!odds?.weekId || !Array.isArray(odds.games)) return odds;
     const monday = odds.weekId.replace("week-of-", "");
-    return { ...odds, games: odds.games.filter((g) => nflWeekMonday(g.commenceTime) === monday) };
+    return {
+      ...odds,
+      games: odds.games.filter((g) => nflWeekMonday(g.commenceTime) === monday && !isTooEarlyGame(g.commenceTime)),
+    };
   }
 
   async function buildPlayerTeamMap(teamNames) {
@@ -750,7 +762,7 @@
     const now = Date.now();
     const upcoming = allEvents.filter((e) => {
       const t = new Date(e.commence_time).getTime();
-      return t >= now - 12 * 3600 * 1000 && !isThursdayGame(e.commence_time);
+      return t >= now - 12 * 3600 * 1000 && !isThursdayGame(e.commence_time) && !isTooEarlyGame(e.commence_time);
     });
 
     if (upcoming.length === 0) {

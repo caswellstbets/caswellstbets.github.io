@@ -42,6 +42,14 @@ function isThursdayGame(commenceTimeIso) {
   return ET_WEEKDAY.format(new Date(commenceTimeIso)) === 'Thu';
 }
 
+// Games kicking off before this hour (US Eastern) are left out entirely -- i.e. the
+// early-morning international games. Change the number to move the cutoff.
+const EARLIEST_KICKOFF_HOUR_ET = 10;
+const ET_HOUR = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' });
+function isTooEarlyGame(commenceTimeIso) {
+  return Number(ET_HOUR.format(new Date(commenceTimeIso))) < EARLIEST_KICKOFF_HOUR_ET;
+}
+
 function logQuota(res, label) {
   console.log(
     `[${label}] requests remaining=${res.headers.get('x-requests-remaining')} used=${res.headers.get('x-requests-used')}`
@@ -176,7 +184,7 @@ async function main() {
   const now = Date.now();
   const upcoming = allEvents.filter((e) => {
     const t = new Date(e.commence_time).getTime();
-    return t >= now - 12 * 60 * 60 * 1000 && !isThursdayGame(e.commence_time);
+    return t >= now - 12 * 60 * 60 * 1000 && !isThursdayGame(e.commence_time) && !isTooEarlyGame(e.commence_time);
   });
 
   if (upcoming.length === 0) {

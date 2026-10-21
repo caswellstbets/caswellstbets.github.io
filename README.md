@@ -120,6 +120,10 @@ access control lives in `firestore.rules`.
 
 - Thursday night games are excluded from `odds.json` on purpose (see `isThursdayGame` in
   `scripts/fetch-odds.mjs`) -- only Sunday/Monday (and Saturday late-season) games show up.
+- So are games kicking off before 10 AM Eastern (the early international games), via
+  `EARLIEST_KICKOFF_HOUR_ET` in both `scripts/fetch-odds.mjs` and `index.html`. The page also
+  drops them (and any next-week game) from whatever `odds.json` it loads, so stale data can't
+  bring them back.
 - Team defense/special-teams TD props (e.g. "Falcons D/ST") are filtered out -- this is a
   player-pick parlay, and DraftKings/FanDuel don't even name the same defense consistently.
 - Player-to-team tagging comes from matching names against ESPN's roster API; a handful of players
