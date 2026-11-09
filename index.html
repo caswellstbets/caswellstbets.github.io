@@ -1605,6 +1605,79 @@
     });
   }
 
+  // ---------------------------------------------------------------------
+  // Berk's Dumbass Corner. Reads berk_picks.json (the permanent record a
+  // scheduled Action appends to every 5 minutes, see scripts/fetch-berk.mjs)
+  // and merges in his ntfy topic's live feed so brand-new picks show up
+  // within a minute, before the Action has caught up.
+  // ---------------------------------------------------------------------
+
+  const BERK_TOPIC = "berko-nba-20260414-172920";
+
+  async function fetchBerkLive() {
+    const res = await fetch(`https://ntfy.sh/${BERK_TOPIC}/json?poll=1&since=all`);
+    if (!res.ok) throw new Error(`ntfy fetch failed: ${res.status}`);
+    return (await res.text())
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line))
+      .filter((m) => m.event === "message");
+  }
+
+  async function loadBerkPicks() {
+    const byId = new Map();
+    const [saved, live] = await Promise.allSettled([
+      fetch(`berk_picks.json?t=${Date.now()}`).then((r) => {
+        if (!r.ok) throw new Error(`berk_picks.json fetch failed: ${r.status}`);
+        return r.json();
+      }),
+      fetchBerkLive(),
+    ]);
+    if (saved.status === "fulfilled") saved.value.messages.forEach((m) => byId.set(m.id, m));
+    else console.error(saved.reason);
+    if (live.status === "fulfilled") live.value.forEach((m) => byId.set(m.id, m));
+    else console.error(live.reason);
+
+    const metaEl = document.getElementById("berk-meta");
+    if (!byId.size) {
+      metaEl.textContent = "Couldn't load Berk's picks right now.";
+      return;
+    }
+    renderBerkPicks([...byId.values()].sort((a, b) => b.time - a.time));
+    metaEl.textContent = `${byId.size} notifications · checked ${new Date().toLocaleTimeString()}`;
+  }
+
+  function berkIcon(m) {
+    const tags = m.tags || [];
+    if (tags.includes("basketball")) return /updated/i.test(m.title) ? "🔁" : "🏀";
+    if (tags.includes("mlb")) return "⚾";
+    return "📣";
+  }
+
+  function renderBerkPicks(messages) {
+    document.getElementById("berk-list").innerHTML = messages
+      .map((m) => {
+        const lines = (m.message || "").split("\n");
+        const isMatchup = /^[A-Z]{2,4} @ [A-Z]{2,4}$/.test(lines[0]);
+        const heading = isMatchup ? `${lines[0]}: ${m.title}` : m.title;
+        const body = isMatchup ? lines.slice(1) : lines;
+        const blank = body.findIndex((l) => !l.trim());
+        const detail = (blank === -1 ? body : body.slice(0, blank)).join(" · ");
+        const when = new Date(m.time * 1000).toLocaleString(undefined, {
+          month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+        });
+        return (
+          `<div class="result-item">` +
+          `<span class="result-icon">${berkIcon(m)}</span>` +
+          `<span class="result-team">${escapeHtml(heading)}</span>` +
+          `<span class="result-matchup">${escapeHtml(when)}</span>` +
+          (detail ? `<div class="berk-detail">${escapeHtml(detail)}</div>` : "") +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
   async function init() {
     if (usingLocalTestMode) {
       const banner = document.createElement("div");
@@ -1622,6 +1695,8 @@
 
     wireNoteForm();
     loadHoldings();
+    loadBerkPicks();
+    setInterval(loadBerkPicks, 60000);
 
     try {
       await Promise.all([loadOdds(), loadFantasyTeams()]);
@@ -1691,23 +1766,12 @@
   <div class="results-section berk-section">
     <h2>Berk's Dumbass Corner 🤡</h2>
     <div class="subhead">Every pick Berk's model has pushed, preserved forever so he can't pretend he didn't say it. Bet accordingly (don't).</div>
-    <div class="odds-meta"><a href="https://github.com/caswellstbets/berko-nba-ntfy-archive" target="_blank" rel="noopener">View the full read-only archive →</a></div>
-    <div class="result-item">
-      <span class="result-icon">🏀</span><span class="result-team">CLE @ CHA: Over 215.5 at -100</span><span class="result-matchup">Nov 09, 5:31 PM ET</span>
-      <div class="berk-detail">New pick · BetMGM · 4.44 units · edge +7.85% · confidence Medium</div>
+    <div class="odds-meta">
+      <a href="https://github.com/caswellstbets/caswellstbets.github.io/blob/main/berk_picks.json" target="_blank" rel="noopener">View every pick (full record) →</a>
+      · <a href="https://github.com/caswellstbets/berko-nba-ntfy-archive" target="_blank" rel="noopener">Original read-only archive</a>
     </div>
-    <div class="result-item">
-      <span class="result-icon">🔁</span><span class="result-team">CLE @ CHA: Over 215.0 at -100</span><span class="result-matchup">Nov 09, 5:49 PM ET</span>
-      <div class="berk-detail">Updated · line 215.5 → 215.0 · 4.76 units · edge +8.36% · confidence High</div>
-    </div>
-    <div class="result-item">
-      <span class="result-icon">🔁</span><span class="result-team">CLE @ CHA: Over 215.0 at -100</span><span class="result-matchup">Nov 09, 5:52 PM ET</span>
-      <div class="berk-detail">Updated again · 4.95 units · edge +8.82% · doubling down</div>
-    </div>
-    <div class="result-item">
-      <span class="result-icon">⚾</span><span class="result-team">PAPER MLB: no edges</span><span class="result-matchup">Nov 09, 9:30 AM ET</span>
-      <div class="berk-detail">Scanned 0 games. Nailed it.</div>
-    </div>
+    <div id="berk-meta" class="odds-meta">Loading Berk's picks…</div>
+    <div id="berk-list"></div>
   </div>
 
   <div class="footer-note">
