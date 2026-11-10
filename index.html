@@ -1661,38 +1661,53 @@
     return "📣";
   }
 
-  // Odds checks only run on brand-new picks (the archive skips updates), so
-  // older update-message records from before that change are hidden here.
-  const BERK_VERDICT_TEXT = {
-    "confirmed": ["✅", "same line and odds"],
-    "line matches": ["✅", "same line and odds"],
-    "close (price moved slightly)": ["🟡", "same line, odds slightly different"],
-    "price off": ["❌", "same line, odds noticeably worse"],
-    "different line": ["❌", "different line"],
-    "not offered": ["❌", "not offered"],
+  const BERK_VERDICT_ICONS = {
+    "same line and odds": "✅",
+    "same line, odds slightly worse": "🟡",
+    "same line, odds noticeably worse": "❌",
+    "different line": "❌",
+    "not offered": "❌",
+    // Wording used by the first version of the archive's checks.
+    "confirmed": "✅",
+    "line matches": "✅",
+    "close (price moved slightly)": "🟡",
+    "price off": "❌",
   };
 
-  function berkFoundLabel(selection, line, price) {
-    const odds = `${price > 0 ? "+" : ""}${price}`;
-    if (line == null) return `${selection.replace(/ [+-]?\d+(\.\d)?$/, "")} at ${odds}`;
-    const shown = /^(Over|Under) /.test(selection) ? line : `${line > 0 ? "+" : ""}${line}`;
-    return `${selection.replace(/[+-]?\d+(\.\d)?$/, shown)} at ${odds}`;
+  function berkFoundLabel(selection, check) {
+    if (check.price == null) return "not offered";
+    const odds = `${check.price > 0 ? "+" : ""}${check.price}`;
+    const alt = check.alt_line ? " (alt line)" : "";
+    if (check.line == null) return `${selection.replace(/ [+-]?\d+(\.\d)?$/, "")} at ${odds}${alt}`;
+    const shown = /^(Over|Under) /.test(selection) ? check.line : `${check.line > 0 ? "+" : ""}${check.line}`;
+    return `${selection.replace(/[+-]?\d+(\.\d)?$/, shown)} at ${odds}${alt}`;
   }
 
-  // e.g. "✅ Also seen at DraftKings: IND +4.5 at -105 (same line and odds, 43 min after alert)"
-  function berkChecksHtml(message, checks) {
-    if (!/new/i.test(message.title)) return "";
-    return (checks || [])
-      .flatMap((c) =>
-        c.checks.map((k) => {
-          const [icon, text] = BERK_VERDICT_TEXT[k.verdict] || ["⚪", k.verdict];
-          const found = k.price == null ? "not offered" : berkFoundLabel(c.pick.selection, k.line, k.price);
-          return (
-            `<div class="berk-check">${icon} Also seen at ${escapeHtml(k.book)}: ${escapeHtml(found)} ` +
-            `(${escapeHtml(text)}, ${Math.round(c.minutes_after_alert)} min after alert)</div>`
-          );
-        })
-      )
+  // For each pick in a message: what the book Berk named had, then every other
+  // book the archive's odds check saw, e.g.
+  // "✅ BetMGM (Berk's book): IND +4.5 at -102, same line and odds · 2 min after alert"
+  // "Also seen: DraftKings IND +4.5 at -105 · FanDuel IND +4.5 at -108 · ..."
+  function berkChecksHtml(records) {
+    return (records || [])
+      .filter((r) => r.checks.length)
+      .map((r) => {
+        const sel = r.pick.selection;
+        const named = r.checks.find((c) => c.named_book);
+        const others = r.checks.filter((c) => !c.named_book);
+        const when = `${Math.round(r.minutes_after_alert)} min after alert`;
+        const head = named
+          ? `${BERK_VERDICT_ICONS[named.verdict] || "⚪"} ${escapeHtml(named.book)} (Berk's book): ` +
+            `${escapeHtml(berkFoundLabel(sel, named))}, ${escapeHtml(named.verdict)} · ${when}`
+          : "named_book" in r.checks[0]
+            ? `⚪ ${escapeHtml(r.pick.book)} (Berk's book): no free odds feed covers it · ${when}`
+            : `⚪ ${escapeHtml(r.pick.book)} (Berk's book): not checked, only DraftKings was (older check) · ${when}`;
+        const rest = others.length
+          ? `<div class="berk-check">Also seen: ` +
+            others.map((c) => `${escapeHtml(c.book)} ${escapeHtml(berkFoundLabel(sel, c))}`).join(" · ") +
+            `</div>`
+          : "";
+        return `<div class="berk-check"><strong>${escapeHtml(sel)} ${r.pick.price > 0 ? "+" : ""}${r.pick.price}</strong> · ${head}</div>${rest}`;
+      })
       .join("");
   }
 
@@ -1719,7 +1734,7 @@
           `<span class="result-team">${escapeHtml(heading)}</span>` +
           `<span class="result-matchup">${escapeHtml(when)}</span>` +
           (detail ? `<div class="berk-detail">${escapeHtml(detail)}</div>` : "") +
-          berkChecksHtml(m, checksById.get(m.id)) +
+          berkChecksHtml(checksById.get(m.id)) +
           `</div>`
         );
       })
