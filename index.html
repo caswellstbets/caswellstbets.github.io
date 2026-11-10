@@ -310,6 +310,7 @@
   .result-item .result-matchup { color: #888; font-size: 0.85em; margin-left: 6px; }
 
   .berk-detail { color: #888; font-size: 0.85em; margin-top: 2px; }
+  .berk-check { color: #555; font-size: 0.82em; margin-top: 3px; }
   .footer-note {
     margin-top: 30px;
     padding-top: 14px;
@@ -1615,6 +1616,8 @@
   const BERK_TOPIC = "berko-nba-20260414-172920";
   const BERK_ARCHIVE_URL =
     "https://raw.githubusercontent.com/caswellstbets/berko-nba-ntfy-archive/main/notifications.jsonl";
+  const BERK_CHECKS_URL =
+    "https://raw.githubusercontent.com/caswellstbets/berko-nba-ntfy-archive/main/verifications.jsonl";
 
   async function fetchJsonl(url) {
     const res = await fetch(url);
@@ -1622,38 +1625,73 @@
     return (await res.text())
       .split("\n")
       .filter((line) => line.trim())
-      .map((line) => JSON.parse(line))
-      .filter((m) => m.event === "message");
+      .map((line) => JSON.parse(line));
   }
 
   async function loadBerkPicks() {
     const byId = new Map();
-    const [saved, live] = await Promise.allSettled([
+    const [saved, live, checks] = await Promise.allSettled([
       fetchJsonl(`${BERK_ARCHIVE_URL}?t=${Date.now()}`),
       fetchJsonl(`https://ntfy.sh/${BERK_TOPIC}/json?poll=1&since=all`),
+      fetchJsonl(`${BERK_CHECKS_URL}?t=${Date.now()}`),
     ]);
-    if (saved.status === "fulfilled") saved.value.forEach((m) => byId.set(m.id, m));
-    else console.error(saved.reason);
-    if (live.status === "fulfilled") live.value.forEach((m) => byId.set(m.id, m));
-    else console.error(live.reason);
+    for (const result of [saved, live]) {
+      if (result.status === "fulfilled") result.value.filter((m) => m.event === "message").forEach((m) => byId.set(m.id, m));
+      else console.error(result.reason);
+    }
+    const checksById = new Map();
+    if (checks.status === "fulfilled") {
+      checks.value.forEach((c) => checksById.set(c.message_id, [...(checksById.get(c.message_id) || []), c]));
+    }
 
     const metaEl = document.getElementById("berk-meta");
     if (!byId.size) {
       metaEl.textContent = "Couldn't load Berk's picks right now.";
       return;
     }
-    renderBerkPicks([...byId.values()].sort((a, b) => b.time - a.time));
+    renderBerkPicks([...byId.values()].sort((a, b) => b.time - a.time), checksById);
     metaEl.textContent = `${byId.size} notifications · checked ${new Date().toLocaleTimeString()}`;
   }
 
   function berkIcon(m) {
     const tags = m.tags || [];
+    if (/removed/i.test(m.title)) return "🗑️";
     if (tags.includes("basketball")) return /updated/i.test(m.title) ? "🔁" : "🏀";
     if (tags.includes("mlb")) return "⚾";
     return "📣";
   }
 
-  function renderBerkPicks(messages) {
+  const BERK_VERDICT_ICONS = {
+    "confirmed": "✅",
+    "line matches": "✅",
+    "close (price moved slightly)": "🟡",
+    "price off": "❌",
+    "different line": "❌",
+    "not offered": "❌",
+  };
+
+  // One line per odds check the archive ran on this message's picks, e.g.
+  // "✅ IND +4.5 -104: DraftKings had 4.5 -105, line matches (37 min after alert)".
+  function berkChecksHtml(checks) {
+    return (checks || [])
+      .map((c) => {
+        const claim = `${c.pick.selection} ${c.pick.price > 0 ? "+" : ""}${c.pick.price}`;
+        if (c.note) return `<div class="berk-check">⚪ Odds check, ${escapeHtml(claim)}: not checked (${escapeHtml(c.note)})</div>`;
+        return c.checks
+          .map((k) => {
+            const found = k.price == null ? "not offered" : `${k.line ?? ""} ${k.price > 0 ? "+" : ""}${k.price}`.trim();
+            return (
+              `<div class="berk-check">${BERK_VERDICT_ICONS[k.verdict] || "⚪"} Odds check, ${escapeHtml(claim)}: ` +
+              `${escapeHtml(k.book)} had ${escapeHtml(found)}, ${escapeHtml(k.verdict)} ` +
+              `(${Math.round(c.minutes_after_alert)} min after alert)</div>`
+            );
+          })
+          .join("");
+      })
+      .join("");
+  }
+
+  function renderBerkPicks(messages, checksById) {
     document.getElementById("berk-list").innerHTML = messages
       .map((m) => {
         // Messages are blank-line-separated blocks: one per pick, then
@@ -1676,6 +1714,7 @@
           `<span class="result-team">${escapeHtml(heading)}</span>` +
           `<span class="result-matchup">${escapeHtml(when)}</span>` +
           (detail ? `<div class="berk-detail">${escapeHtml(detail)}</div>` : "") +
+          berkChecksHtml(checksById.get(m.id)) +
           `</div>`
         );
       })
