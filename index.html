@@ -311,6 +311,15 @@
 
   .berk-detail { color: #888; font-size: 0.85em; margin-top: 2px; }
   .berk-check { color: #555; font-size: 0.82em; margin-top: 3px; }
+  .berk-today { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 10px 0 14px; background: #fafafa; }
+  .berk-today h3 { margin: 0 0 6px; font-size: 1em; }
+  .berk-game { padding: 6px 0; border-top: 1px solid #eee; }
+  .berk-game:first-of-type { border-top: none; }
+  .berk-game-name { font-weight: 700; font-size: 0.9em; }
+  .berk-today-pick { font-size: 0.88em; margin-top: 3px; }
+  .berk-today-pick.gone { color: #999; }
+  .berk-today-pick.gone .berk-sel { text-decoration: line-through; }
+  .berk-today-sub { color: #777; font-size: 0.85em; margin-left: 1.6em; }
   .footer-note {
     margin-top: 30px;
     padding-top: 14px;
@@ -1650,6 +1659,7 @@
       return;
     }
     renderBerkPicks([...byId.values()].sort((a, b) => b.time - a.time), checksById);
+    renderBerkToday([...byId.values()], checks.status === "fulfilled" ? checks.value : []);
     metaEl.textContent = `${byId.size} notifications · checked ${new Date().toLocaleTimeString()}`;
   }
 
@@ -1739,6 +1749,156 @@
         );
       })
       .join("");
+  }
+
+  // ---- Today at a glance: replays today's alerts (ET) so each game shows
+  // only where every pick stands right now, instead of the full history.
+
+  const BERK_TZ = "America/New_York";
+  const berkDay = (ts) => new Date(ts * 1000).toLocaleDateString("en-US", { timeZone: BERK_TZ });
+  const berkTime = (ts) => new Date(ts * 1000).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const berkOdds = (p) => (p == null ? "" : `${p > 0 ? "+" : ""}${p}`);
+
+  // One key per bet, so "Over 215.5" -> "Over 215.0" counts as the same pick moving.
+  function berkPickKey(matchup, selection) {
+    let m = selection.match(/^(Over|Under) /);
+    if (m) return `${matchup}|total|${m[1]}`;
+    m = selection.match(/^([A-Z]{2,4}) (ML|Moneyline)$/);
+    if (m) return `${matchup}|ml|${m[1]}`;
+    m = selection.match(/^([A-Z]{2,4}) [+-]?\d/);
+    if (m) return `${matchup}|spread|${m[1]}`;
+    return `${matchup}|${selection}`;
+  }
+
+  // Every pick an alert talks about: {kind: new|updated|removed, matchup, selection, price, book, units, edge, confidence, sharp}
+  function berkParseAlert(m) {
+    const title = m.title || "";
+    if (!/NBA/.test(title)) return [];
+    const blocks = (m.message || "").split(/\n\s*\n/).map((b) => b.split("\n").map((l) => l.trim()).filter(Boolean));
+    const titleKind = /Removed/i.test(title) ? "removed" : /Updated/i.test(title) ? "updated" : "new";
+    const out = [];
+    let kind = titleKind;
+    blocks.forEach((lines, i) => {
+      if (!lines.length || /^(Other active picks|No active picks)/.test(lines[0]) || /\| \w{3} \d{2}, \d{4} \|/.test(lines[0])) return;
+      const section = lines[0].match(/^(New|Updated|Removed) picks \(\d+\):$/);
+      if (section) { kind = section[1].toLowerCase(); lines = lines.slice(1); }
+      if (!lines.length) return;
+      let matchup, selection, price = null;
+      const multi = lines[0].match(/^([A-Z]{2,4} @ [A-Z]{2,4}): (.+?)(?: at ([+-]\d+))?$/);
+      if (multi) {
+        [, matchup, selection] = multi;
+        price = multi[3] ? Number(multi[3]) : null;
+      } else if (i === 0 && /^[A-Z]{2,4} @ [A-Z]{2,4}$/.test(lines[0])) {
+        matchup = lines[0];
+        const t = title.split(": ").pop().match(/^(.+?)(?: at ([+-]\d+))?$/);
+        selection = t[1];
+        price = t[2] ? Number(t[2]) : null;
+      } else return;
+      const pick = { kind, matchup, selection, price };
+      for (const l of lines) {
+        let x = l.match(/^Book to check: (.+?) \| Model size: ([\d.]+) units/);
+        if (x) { pick.book = x[1]; pick.units = Number(x[2]); }
+        x = l.match(/^(?:Model|Market) edge: ([+-][\d.]+ ?(?:%|pp)) \| Confidence: (\w+)(.*)$/);
+        if (x) { pick.edge = x[1]; pick.confidence = x[2]; pick.sharp = /Sharp support/.test(x[3]); }
+      }
+      out.push(pick);
+    });
+    return out;
+  }
+
+  function renderBerkToday(messages, verifications) {
+    const el = document.getElementById("berk-today");
+    const today = berkDay(Date.now() / 1000);
+    const todays = messages.filter((m) => berkDay(m.time) === today).sort((a, b) => a.time - b.time);
+
+    const picks = new Map(); // key -> current state of that bet
+    for (const m of todays) {
+      for (const p of berkParseAlert(m)) {
+        const key = berkPickKey(p.matchup, p.selection);
+        let s = picks.get(key);
+        if (p.kind === "removed") {
+          if (s) Object.assign(s, { removed: true, removedAt: m.time });
+          else picks.set(key, { key, matchup: p.matchup, selection: p.selection, removed: true, removedAt: m.time, firstAt: m.time, updates: 0, msgIds: [m.id] });
+          continue;
+        }
+        if (!s || (s.removed && p.kind === "new")) {
+          const readded = !!s;
+          s = { key, matchup: p.matchup, firstAt: m.time, firstSel: p.selection, firstPrice: p.price, updates: 0, msgIds: [], readded };
+          picks.set(key, s);
+        } else {
+          s.updates++;
+        }
+        Object.assign(s, p, { removed: false, lastAt: m.time });
+        s.msgIds.push(m.id);
+      }
+    }
+
+    if (!picks.size) {
+      el.innerHTML = `<div class="berk-today"><h3>Today at a glance</h3><div class="berk-detail">No NBA picks yet today.</div></div>`;
+      return;
+    }
+
+    // Latest odds check for each bet (from any of today's alerts about it).
+    const latestCheck = new Map();
+    for (const r of verifications) {
+      if (!r.checks || !r.checks.length) continue;
+      const key = berkPickKey(`${r.pick.away} @ ${r.pick.home}`, r.pick.selection);
+      const s = picks.get(key);
+      if (!s || !s.msgIds.includes(r.message_id)) continue;
+      const prev = latestCheck.get(key);
+      if (!prev || r.checked_time > prev.checked_time || (r.checked_time === prev.checked_time && r.alert_time > prev.alert_time)) latestCheck.set(key, r);
+    }
+
+    const games = new Map();
+    for (const s of picks.values()) games.set(s.matchup, [...(games.get(s.matchup) || []), s]);
+
+    const checkLine = (s) => {
+      const r = latestCheck.get(s.key);
+      if (!r) return "";
+      const named = r.checks.find((c) => c.named_book);
+      const sameLine = r.checks.filter((c) => c.price != null && /^same line/.test(c.verdict));
+      const best = sameLine.sort((a, b) => b.price - a.price)[0];
+      const stale = r.pick.price !== s.price || r.pick.selection !== s.selection
+        ? ` (checked when it was ${escapeHtml(r.pick.selection)} ${berkOdds(r.pick.price)})` : "";
+      let txt = named
+        ? `${BERK_VERDICT_ICONS[named.verdict] || "⚪"} ${escapeHtml(named.book)} actually had ${escapeHtml(berkFoundLabel(r.pick.selection, named))}`
+        : `⚪ no free feed covers ${escapeHtml(r.pick.book)}`;
+      if (best && (!named || best.book !== named.book)) txt += ` · best seen: ${escapeHtml(best.book)} ${berkOdds(best.price)}`;
+      return `<div class="berk-today-sub">Odds check ${berkTime(r.checked_time)}${stale}: ${txt}</div>`;
+    };
+
+    const pickHtml = (s) => {
+      if (s.removed) {
+        const was = s.price != null ? ` (was ${berkOdds(s.price)}${s.book ? ` at ${escapeHtml(s.book)}` : ""}, posted ${berkTime(s.firstAt)})` : "";
+        return `<div class="berk-today-pick gone">🗑️ <span class="berk-sel">${escapeHtml(s.selection)}</span> · pulled at ${berkTime(s.removedAt)}${was}</div>` + checkLine(s);
+      }
+      const facts = [
+        s.book && `at ${escapeHtml(s.book)}`,
+        s.units != null && `${s.units.toFixed(1)}u`,
+        s.edge && `edge ${escapeHtml(s.edge)}`,
+        s.confidence && `${escapeHtml(s.confidence)}${s.sharp ? " + sharp support" : ""}`,
+      ].filter(Boolean).join(" · ");
+      const opened = `${escapeHtml(s.firstSel)} ${berkOdds(s.firstPrice)}`;
+      const moved = opened !== `${escapeHtml(s.selection)} ${berkOdds(s.price)}` ? `, opened at ${opened}` : "";
+      const history = `${s.readded ? "re-added" : "posted"} ${berkTime(s.firstAt)}` +
+        (s.updates ? `, updated ${s.updates}× (last ${berkTime(s.lastAt)})` : "") + moved;
+      return (
+        `<div class="berk-today-pick">🟢 <strong class="berk-sel">${escapeHtml(s.selection)} ${berkOdds(s.price)}</strong> ${facts}</div>` +
+        `<div class="berk-today-sub">${history}</div>` +
+        checkLine(s)
+      );
+    };
+
+    const active = [...picks.values()].filter((s) => !s.removed).length;
+    el.innerHTML =
+      `<div class="berk-today"><h3>Today at a glance</h3>` +
+      `<div class="berk-detail">${active} active pick${active === 1 ? "" : "s"}` +
+      (picks.size > active ? `, ${picks.size - active} pulled` : "") +
+      ` · where every pick stands as of ${berkTime(Date.now() / 1000)}. Full history below.</div>` +
+      [...games.entries()]
+        .map(([game, list]) => `<div class="berk-game"><div class="berk-game-name">🏀 ${escapeHtml(game)}</div>${list.map(pickHtml).join("")}</div>`)
+        .join("") +
+      `</div>`;
   }
 
   async function init() {
@@ -1834,6 +1994,7 @@
       · <a href="https://github.com/caswellstbets/berko-nba-ntfy-archive/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog (catches deleted picks)</a>
     </div>
     <div id="berk-meta" class="odds-meta">Loading Berk's picks…</div>
+    <div id="berk-today"></div>
     <div id="berk-list"></div>
   </div>
 
