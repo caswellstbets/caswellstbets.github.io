@@ -319,6 +319,13 @@
   .berk-today-pick { font-size: 0.88em; margin-top: 3px; }
   .berk-today-pick.gone { color: #999; }
   .berk-today-pick.gone .berk-sel { text-decoration: line-through; }
+  .berk-group > summary { cursor: pointer; padding: 8px 0; list-style-position: outside; }
+  .berk-group-meta { color: #888; font-size: 0.85em; font-weight: normal; margin-left: 8px; }
+  .berk-day-group { border-top: 1px solid var(--border); }
+  .berk-day-group > summary { font-size: 0.95em; }
+  .berk-game-group { margin-left: 14px; border-top: 1px solid #f0f0f0; }
+  .berk-game-group > summary { font-size: 0.9em; padding: 6px 0; }
+  .berk-game-group .result-item { margin-left: 14px; }
   .berk-today-sub { color: #777; font-size: 0.85em; margin-left: 1.6em; }
   .footer-note {
     margin-top: 30px;
@@ -1721,42 +1728,134 @@
       .join("");
   }
 
+  // Which date/game groups the viewer has opened or closed, so the 60-second
+  // refresh doesn't snap them back. Unset groups use the default (today's
+  // date open, everything else closed).
+  const BERK_TZ = "America/New_York";
+  const berkDay = (ts) => new Date(ts * 1000).toLocaleDateString("en-US", { timeZone: BERK_TZ });
+  const berkTime = (ts) => new Date(ts * 1000).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const berkOpenState = new Map();
+
+  // Split one alert into per-game items, so a "2 updated" alert covering two
+  // games shows up under each game with only that game's part.
+  function berkSplitByGame(m) {
+    const title = m.title || "";
+    const titleKind = /Removed/i.test(title) ? "removed" : /Updated/i.test(title) ? "updated" : "new";
+    const blocks = (m.message || "")
+      .split(/\n\s*\n/)
+      .map((b) => b.split("\n").map((l) => l.trim()).filter(Boolean))
+      .filter((b) => b.length && !/^(Other active picks|No active picks)/.test(b[0]) && !/\| \w{3} \d{2}, \d{4} \|/.test(b[0]));
+    const byGame = new Map();
+    let kind = titleKind;
+    blocks.forEach((lines, i) => {
+      const section = lines[0].match(/^(New|Updated|Removed) picks \(\d+\):$/);
+      if (section) { kind = section[1].toLowerCase(); lines = lines.slice(1); }
+      if (!lines.length) return;
+      let game, pick, rest;
+      const multi = lines[0].match(/^([A-Z]{2,4} @ [A-Z]{2,4}): (.+)$/);
+      if (multi) {
+        [, game, pick] = multi;
+        rest = lines.slice(1);
+      } else if (i === 0 && /^[A-Z]{2,4} @ [A-Z]{2,4}$/.test(lines[0])) {
+        game = lines[0];
+        pick = title.split(": ").pop();
+        rest = lines.slice(1);
+      } else {
+        game = null;
+        rest = lines;
+      }
+      const key = game || "Other";
+      if (!byGame.has(key)) byGame.set(key, []);
+      byGame.get(key).push({ kind, pick, rest });
+    });
+    if (!byGame.size) byGame.set("Other", []);
+    return [...byGame.entries()].map(([game, parts]) => {
+      const label = { new: "New", updated: "Updated", removed: "Removed" };
+      const picks = parts.filter((p) => p.pick);
+      const heading = picks.length ? picks.map((p) => `${label[p.kind]}: ${p.pick}`).join(" · ") : title;
+      const icon = picks.length
+        ? (picks.every((p) => p.kind === "removed") ? "🗑️" : picks.every((p) => p.kind === "updated") ? "🔁" : "🏀")
+        : berkIcon(m);
+      const detail = parts.map((p) => p.rest.join(" · ")).filter(Boolean).join(" — ");
+      return { game, heading, icon, detail, m };
+    });
+  }
+
   function renderBerkPicks(messages, checksById) {
-    document.getElementById("berk-list").innerHTML = messages
-      .map((m) => {
-        // Messages are blank-line-separated blocks: one per pick, then
-        // "Other active picks" (noise here) and a "Regular Season | date" footer.
-        const blocks = (m.message || "")
-          .split(/\n\s*\n/)
-          .map((b) => b.split("\n").filter((l) => l.trim()))
-          .filter((b) => b.length && !/^Other active picks/.test(b[0]) && !/\| \w{3} \d{2}, \d{4} \|/.test(b[0]));
-        const first = blocks[0] || [];
-        const isMatchup = /^[A-Z]{2,4} @ [A-Z]{2,4}$/.test(first[0] || "");
-        const heading = isMatchup ? `${first[0]}: ${m.title}` : m.title;
-        if (isMatchup) blocks[0] = first.slice(1);
-        const detail = blocks.map((b) => b.join(" · ")).filter(Boolean).join(" — ");
-        const when = new Date(m.time * 1000).toLocaleString(undefined, {
-          month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-        });
+    const list = document.getElementById("berk-list");
+    const today = berkDay(Date.now() / 1000);
+
+    // date -> game -> items, newest first at every level (messages arrive newest first).
+    const days = new Map();
+    for (const m of messages) {
+      const day = berkDay(m.time);
+      if (!days.has(day)) days.set(day, new Map());
+      const games = days.get(day);
+      for (const item of berkSplitByGame(m)) {
+        if (!games.has(item.game)) games.set(item.game, []);
+        games.get(item.game).push(item);
+      }
+    }
+
+    const itemHtml = ({ heading, icon, detail, m, game }) => {
+      const when = berkTime(m.time);
+      const records = (checksById.get(m.id) || []).filter((r) => game === "Other" || `${r.pick.away} @ ${r.pick.home}` === game);
+      return (
+        `<div class="result-item">` +
+        `<span class="result-icon">${icon}</span>` +
+        `<span class="result-team">${escapeHtml(heading)}</span>` +
+        `<span class="result-matchup">${escapeHtml(when)}</span>` +
+        (/Price unverified/.test(m.title || "") ? `<span class="result-matchup">· price unverified</span>` : "") +
+        (detail ? `<div class="berk-detail">${escapeHtml(detail)}</div>` : "") +
+        berkChecksHtml(records) +
+        `</div>`
+      );
+    };
+
+    const isOpen = (key, fallback) => (berkOpenState.has(key) ? berkOpenState.get(key) : fallback);
+    const count = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+    list.innerHTML = [...days.entries()]
+      .map(([day, games]) => {
+        const all = [...games.values()].flat();
+        const latest = Math.max(...all.map((i) => i.m.time));
+        const alerts = new Set(all.map((i) => i.m.id)).size;
+        const dayLabel = new Date(latest * 1000).toLocaleDateString("en-US", { timeZone: BERK_TZ, weekday: "short", month: "short", day: "numeric" });
+        const realGames = [...games.keys()].filter((g) => g !== "Other").length;
+        const dayKey = `day|${day}`;
+        const gamesHtml = [...games.entries()]
+          .sort((a, b) => Math.max(...b[1].map((i) => i.m.time)) - Math.max(...a[1].map((i) => i.m.time)))
+          .map(([game, items]) => {
+            const gameKey = `game|${day}|${game}`;
+            const gLatest = Math.max(...items.map((i) => i.m.time));
+            const icon = game === "Other" ? "📣" : "🏀";
+            return (
+              `<details class="berk-group berk-game-group" data-key="${escapeHtml(gameKey)}"${isOpen(gameKey, false) ? " open" : ""}>` +
+              `<summary><strong>${icon} ${escapeHtml(game)}</strong>` +
+              `<span class="berk-group-meta">${count(items.length, "alert")} · latest ${berkTime(gLatest)}</span></summary>` +
+              items.map(itemHtml).join("") +
+              `</details>`
+            );
+          })
+          .join("");
         return (
-          `<div class="result-item">` +
-          `<span class="result-icon">${berkIcon(m)}</span>` +
-          `<span class="result-team">${escapeHtml(heading)}</span>` +
-          `<span class="result-matchup">${escapeHtml(when)}</span>` +
-          (detail ? `<div class="berk-detail">${escapeHtml(detail)}</div>` : "") +
-          berkChecksHtml(checksById.get(m.id)) +
-          `</div>`
+          `<details class="berk-group berk-day-group" data-key="${escapeHtml(dayKey)}"${isOpen(dayKey, day === today) ? " open" : ""}>` +
+          `<summary><strong>📅 ${escapeHtml(dayLabel)}${day === today ? " (today)" : ""}</strong>` +
+          `<span class="berk-group-meta">${realGames ? count(realGames, "game") + " · " : ""}${count(alerts, "alert")} · latest ${berkTime(latest)}</span></summary>` +
+          gamesHtml +
+          `</details>`
         );
       })
       .join("");
+
+    list.querySelectorAll("details.berk-group").forEach((d) =>
+      d.addEventListener("toggle", () => berkOpenState.set(d.dataset.key, d.open))
+    );
   }
 
   // ---- Today at a glance: replays today's alerts (ET) so each game shows
   // only where every pick stands right now, instead of the full history.
 
-  const BERK_TZ = "America/New_York";
-  const berkDay = (ts) => new Date(ts * 1000).toLocaleDateString("en-US", { timeZone: BERK_TZ });
-  const berkTime = (ts) => new Date(ts * 1000).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const berkOdds = (p) => (p == null ? "" : `${p > 0 ? "+" : ""}${p}`);
 
   // One key per bet, so "Over 215.5" -> "Over 215.0" counts as the same pick moving.
