@@ -326,6 +326,20 @@
   .berk-game-group { margin-left: 14px; border-top: 1px solid #f0f0f0; }
   .berk-game-group > summary { font-size: 0.9em; padding: 6px 0; }
   .berk-game-group .result-item { margin-left: 14px; }
+  .berk-score { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 10px 0 4px; }
+  .berk-score h3 { margin: 0 0 8px; font-size: 1em; }
+  .berk-score-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .berk-score-card { background: #fafafa; border-radius: 6px; padding: 8px 10px; }
+  .berk-score-card .label { color: #666; font-size: 0.8em; }
+  .berk-score-card .record { font-size: 1.35em; font-weight: 700; margin: 2px 0; }
+  .berk-score-card .units { font-size: 0.88em; }
+  .berk-score-card .units.up { color: #1a7f37; }
+  .berk-score-card .units.down { color: #c62828; }
+  .berk-score-note { color: #888; font-size: 0.8em; margin-top: 6px; }
+  .berk-score table { width: 100%; border-collapse: collapse; font-size: 0.82em; margin-top: 6px; }
+  .berk-score th, .berk-score td { text-align: left; padding: 4px 4px; border-top: 1px solid #eee; vertical-align: top; }
+  .berk-score th { color: #666; font-weight: 600; }
+  @media (max-width: 480px) { .berk-score-cols { grid-template-columns: 1fr; } }
   .berk-today-sub { color: #777; font-size: 0.85em; margin-left: 1.6em; }
   .footer-note {
     margin-top: 30px;
@@ -1667,6 +1681,7 @@
     }
     renderBerkPicks([...byId.values()].sort((a, b) => b.time - a.time), checksById);
     renderBerkToday([...byId.values()], checks.status === "fulfilled" ? checks.value : []);
+    renderBerkScoreboard([...byId.values()]).catch((err) => console.error(err));
     metaEl.textContent = `${byId.size} notifications · checked ${new Date().toLocaleTimeString()}`;
   }
 
@@ -2000,6 +2015,164 @@
       `</div>`;
   }
 
+  // ---- Scoreboard: grades every NBA pick against final scores from ESPN's
+  // public scoreboard, two ways:
+  //   "First alert": each bet as Berk first posted it (even if later pulled).
+  //   "10 min before tip": the bets still active 10 minutes before tipoff,
+  //   at the line, odds and size they had at that moment.
+
+  // ESPN and Berk sometimes abbreviate teams differently; map both to one.
+  const BERK_TEAM_CANON = { WAS: "WSH", UTA: "UTAH", GSW: "GS", NYK: "NY", SAS: "SA", NOP: "NO", NOR: "NO", BRK: "BKN", PHO: "PHX" };
+  const berkCanon = (t) => BERK_TEAM_CANON[t] || t;
+  const berkScoreCache = new Map(); // "YYYYMMDD" -> events, kept once every game is final
+
+  async function berkScoresFor(yyyymmdd) {
+    if (berkScoreCache.has(yyyymmdd)) return berkScoreCache.get(yyyymmdd);
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${yyyymmdd}`);
+    if (!res.ok) throw new Error(`ESPN scoreboard ${yyyymmdd}: ${res.status}`);
+    const events = (await res.json()).events.map((e) => {
+      const c = e.competitions[0];
+      const side = (h) => c.competitors.find((x) => x.homeAway === h);
+      return {
+        away: berkCanon(side("away").team.abbreviation),
+        home: berkCanon(side("home").team.abbreviation),
+        awayScore: Number(side("away").score),
+        homeScore: Number(side("home").score),
+        tip: Date.parse(e.date) / 1000,
+        final: e.status.type.completed,
+      };
+    });
+    if (events.length && events.every((e) => e.final)) berkScoreCache.set(yyyymmdd, events);
+    return events;
+  }
+
+  // ET calendar day of an alert, as ESPN's "dates" parameter wants it.
+  const berkYmd = (ts) => {
+    const [m, d, y] = berkDay(ts).split("/");
+    return `${y}${m.padStart(2, "0")}${d.padStart(2, "0")}`;
+  };
+
+  // "W", "L", "P" for a pick against a final score.
+  function berkGrade(pick, g) {
+    const [away, home] = pick.matchup.split(" @ ").map(berkCanon);
+    const scoreOf = (t) => (berkCanon(t) === away ? g.awayScore : g.homeScore);
+    const oppOf = (t) => (berkCanon(t) === away ? g.homeScore : g.awayScore);
+    const cmp = (x) => (x > 0 ? "W" : x < 0 ? "L" : "P");
+    let m = pick.selection.match(/^(Over|Under) (\d+(?:\.\d)?)$/);
+    if (m) {
+      const diff = g.awayScore + g.homeScore - Number(m[2]);
+      return cmp(m[1] === "Over" ? diff : -diff);
+    }
+    m = pick.selection.match(/^([A-Z]{2,4}) (?:ML|Moneyline)$/);
+    if (m) return cmp(scoreOf(m[1]) - oppOf(m[1]));
+    m = pick.selection.match(/^([A-Z]{2,4}) ([+-]\d+(?:\.\d)?)$/);
+    if (m) return cmp(scoreOf(m[1]) + Number(m[2]) - oppOf(m[1]));
+    return null;
+  }
+
+  const berkWinPerUnit = (price) => (price > 0 ? price / 100 : 100 / -price);
+
+  function berkTally(rows) {
+    const t = { W: 0, L: 0, P: 0, pending: 0, flat: 0, sized: 0, risked: 0 };
+    for (const r of rows) {
+      if (!r.result) { t.pending++; continue; }
+      t[r.result]++;
+      const units = r.pick.units || 1;
+      const win = r.pick.price != null ? berkWinPerUnit(r.pick.price) : 0;
+      if (r.result === "W") { t.flat += win; t.sized += units * win; }
+      if (r.result === "L") { t.flat -= 1; t.sized -= units; }
+      if (r.result !== "P") t.risked += units;
+    }
+    return t;
+  }
+
+  async function renderBerkScoreboard(messages) {
+    const el = document.getElementById("berk-score");
+    const alerts = messages.filter((m) => /NBA/.test(m.title || "")).sort((a, b) => a.time - b.time);
+
+    // Every bet, keyed by ET day + game + market + side, with its full timeline.
+    const bets = new Map();
+    for (const m of alerts) {
+      for (const p of berkParseAlert(m)) {
+        const key = `${berkYmd(m.time)}|${berkPickKey(p.matchup, p.selection)}`;
+        if (!bets.has(key)) bets.set(key, { key, day: berkYmd(m.time), matchup: p.matchup, events: [] });
+        bets.get(key).events.push({ ...p, time: m.time });
+      }
+    }
+    if (!bets.size) { el.innerHTML = ""; return; }
+
+    const days = [...new Set([...bets.values()].map((b) => b.day))];
+    const scores = new Map();
+    await Promise.all(days.map(async (d) => scores.set(d, await berkScoresFor(d).catch(() => []))));
+
+    const first = [];
+    const atTip = [];
+    for (const b of bets.values()) {
+      const [away, home] = b.matchup.split(" @ ").map(berkCanon);
+      const game = (scores.get(b.day) || []).find((g) => g.away === away && g.home === home);
+      const grade = (pick) => (game && game.final ? berkGrade(pick, game) : null);
+
+      // First alert: the first time this bet appeared with a price.
+      const opened = b.events.find((e) => e.kind !== "removed" && e.price != null);
+      if (opened) first.push({ bet: b, game, pick: opened, result: grade(opened) });
+
+      // 10 minutes before tip: replay up to that moment; keep it only if still active.
+      if (!game) continue;
+      const cutoff = game.tip - 600;
+      let state = null;
+      for (const e of b.events) {
+        if (e.time > cutoff) break;
+        state = e.kind === "removed" ? null : { ...(state || {}), ...e };
+      }
+      if (state && state.price != null) atTip.push({ bet: b, game, pick: state, result: grade(state) });
+    }
+
+    const fmtU = (u) => `${u >= 0 ? "+" : ""}${u.toFixed(2)}u`;
+    const card = (label, rows, note) => {
+      const t = berkTally(rows);
+      const roi = t.risked ? (t.sized / t.risked) * 100 : 0;
+      return (
+        `<div class="berk-score-card"><div class="label">${label}</div>` +
+        `<div class="record">${t.W}-${t.L}${t.P ? `-${t.P}` : ""}</div>` +
+        `<div class="units ${t.sized > 0 ? "up" : t.sized < 0 ? "down" : ""}">${fmtU(t.sized)} at his sizing (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}% ROI)</div>` +
+        `<div class="units ${t.flat > 0 ? "up" : t.flat < 0 ? "down" : ""}">${fmtU(t.flat)} flat 1u each</div>` +
+        `<div class="berk-score-note">${rows.length} bets${t.pending ? `, ${t.pending} not final yet` : ""}. ${note}</div></div>`
+      );
+    };
+
+    const icon = { W: "✅", L: "❌", P: "➖" };
+    const cell = (r) => {
+      if (!r) return `<td class="berk-score-note">not active</td>`;
+      const odds = `${r.pick.price > 0 ? "+" : ""}${r.pick.price}`;
+      return `<td>${r.result ? icon[r.result] : "⏳"} ${escapeHtml(r.pick.selection)} ${odds}` +
+        `${r.pick.units ? ` · ${r.pick.units.toFixed(1)}u` : ""}</td>`;
+    };
+    const atTipByKey = new Map(atTip.map((r) => [r.bet.key, r]));
+    const rowsHtml = first
+      .slice()
+      .sort((a, b) => b.pick.time - a.pick.time)
+      .map((r) => {
+        const g = r.game;
+        const score = g && g.final ? `${g.away} ${g.awayScore}–${g.homeScore} ${g.home}` : g ? "not final" : "no score found";
+        const date = new Date(r.pick.time * 1000).toLocaleDateString("en-US", { timeZone: BERK_TZ, month: "short", day: "numeric" });
+        return `<tr><td>${escapeHtml(date)} · ${escapeHtml(r.bet.matchup)}<div class="berk-score-note">${escapeHtml(score)}</div></td>` +
+          cell(r) + cell(atTipByKey.get(r.bet.key)) + `</tr>`;
+      })
+      .join("");
+
+    const wasOpen = !!el.querySelector("details[open]");
+    el.innerHTML =
+      `<div class="berk-score"><h3>📊 Scoreboard</h3>` +
+      `<div class="berk-score-cols">` +
+      card("As first alerted", first, "Every bet at its first posted line and odds, even ones he pulled later.") +
+      card("10 min before tipoff", atTip, "Only bets still active 10 min before tip, at the line, odds and size they had then.") +
+      `</div>` +
+      `<details class="berk-group"${wasOpen ? " open" : ""}><summary>Every graded bet</summary>` +
+      `<table><tr><th>Game</th><th>First alert</th><th>10 min before tip</th></tr>${rowsHtml}</table></details>` +
+      `<div class="berk-score-note">Final scores from ESPN. Units use the model size he posted; ROI is profit ÷ units risked.</div>` +
+      `</div>`;
+  }
+
   async function init() {
     if (usingLocalTestMode) {
       const banner = document.createElement("div");
@@ -2092,6 +2265,7 @@
       <a href="https://github.com/caswellstbets/berko-nba-ntfy-archive" target="_blank" rel="noopener">View every pick →</a>
       · <a href="https://github.com/caswellstbets/berko-nba-ntfy-archive/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog (catches deleted picks)</a>
     </div>
+    <div id="berk-score"></div>
     <div id="berk-meta" class="odds-meta">Loading Berk's picks…</div>
     <div id="berk-today"></div>
     <div id="berk-list"></div>
