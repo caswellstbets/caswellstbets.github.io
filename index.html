@@ -1679,6 +1679,11 @@
       metaEl.textContent = "Couldn't load Berk's picks right now.";
       return;
     }
+    // Tip times for every day with NBA alerts (finished days are cached).
+    const nbaDays = new Set([...byId.values()].filter((m) => /NBA/.test(m.title || "")).map((m) => berkYmd(m.time)));
+    await Promise.all([...nbaDays].map(async (d) => {
+      for (const g of await berkScoresFor(d).catch(() => [])) berkTipIndex.set(`${d}|${g.away}|${g.home}`, g);
+    }));
     renderBerkPicks([...byId.values()].sort((a, b) => b.time - a.time), checksById);
     renderBerkToday([...byId.values()], checks.status === "fulfilled" ? checks.value : []);
     renderBerkScoreboard([...byId.values()]).catch((err) => console.error(err));
@@ -1847,7 +1852,8 @@
             return (
               `<details class="berk-group berk-game-group" data-key="${escapeHtml(gameKey)}"${isOpen(gameKey, false) ? " open" : ""}>` +
               `<summary><strong>${icon} ${escapeHtml(game)}</strong>` +
-              `<span class="berk-group-meta">${count(items.length, "alert")} · latest ${berkTime(gLatest)}</span></summary>` +
+              `<span class="berk-group-meta">${(() => { const t = berkTipLabel(gLatest, game); return t ? escapeHtml(t) + " · " : ""; })()}` +
+              `${count(items.length, "alert")} · latest ${berkTime(gLatest)}</span></summary>` +
               items.map(itemHtml).join("") +
               `</details>`
             );
@@ -2010,7 +2016,12 @@
       (picks.size > active ? `, ${picks.size - active} pulled` : "") +
       ` · where every pick stands as of ${berkTime(Date.now() / 1000)}. Full history below.</div>` +
       [...games.entries()]
-        .map(([game, list]) => `<div class="berk-game"><div class="berk-game-name">🏀 ${escapeHtml(game)}</div>${list.map(pickHtml).join("")}</div>`)
+        .map(([game, list]) => {
+          const tip = berkTipLabel(list[0].firstAt, game);
+          return `<div class="berk-game"><div class="berk-game-name">🏀 ${escapeHtml(game)}` +
+            (tip ? `<span class="berk-group-meta">${escapeHtml(tip)}</span>` : "") +
+            `</div>${list.map(pickHtml).join("")}</div>`;
+        })
         .join("") +
       `</div>`;
   }
@@ -2024,6 +2035,15 @@
   // ESPN and Berk sometimes abbreviate teams differently; map both to one.
   const BERK_TEAM_CANON = { WAS: "WSH", UTA: "UTAH", GSW: "GS", NYK: "NY", SAS: "SA", NOP: "NO", NOR: "NO", BRK: "BKN", PHO: "PHX" };
   const berkCanon = (t) => BERK_TEAM_CANON[t] || t;
+  const berkTipIndex = new Map(); // "YYYYMMDD|AWAY|HOME" -> ESPN game
+  // "tip 7:30 PM", plus "live" / "final" once it starts, for the game an alert at `ts` was about.
+  function berkTipLabel(ts, matchup) {
+    if (!matchup || !matchup.includes(" @ ")) return "";
+    const [away, home] = matchup.split(" @ ").map(berkCanon);
+    const g = berkTipIndex.get(`${berkYmd(ts)}|${away}|${home}`);
+    if (!g) return "";
+    return `tip ${berkTime(g.tip)}${g.state === "in" ? " · 🔴 live" : g.state === "post" ? " · final" : ""}`;
+  }
   const berkScoreCache = new Map(); // "YYYYMMDD" -> events, kept once every game is final
 
   async function berkScoresFor(yyyymmdd) {
@@ -2040,6 +2060,7 @@
         homeScore: Number(side("home").score),
         tip: Date.parse(e.date) / 1000,
         final: e.status.type.completed,
+        state: e.status.type.state, // pre | in | post
       };
     });
     if (events.length && events.every((e) => e.final)) berkScoreCache.set(yyyymmdd, events);
@@ -2155,7 +2176,8 @@
         const g = r.game;
         const score = g && g.final ? `${g.away} ${g.awayScore}–${g.homeScore} ${g.home}` : g ? "not final" : "no score found";
         const date = new Date(r.pick.time * 1000).toLocaleDateString("en-US", { timeZone: BERK_TZ, month: "short", day: "numeric" });
-        return `<tr><td>${escapeHtml(date)} · ${escapeHtml(r.bet.matchup)}<div class="berk-score-note">${escapeHtml(score)}</div></td>` +
+        const tip = g ? ` · tip ${berkTime(g.tip)}` : "";
+        return `<tr><td>${escapeHtml(date)} · ${escapeHtml(r.bet.matchup)}<div class="berk-score-note">${escapeHtml(score)}${tip}</div></td>` +
           cell(r) + cell(atTipByKey.get(r.bet.key)) + `</tr>`;
       })
       .join("");
